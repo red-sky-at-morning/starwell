@@ -32,7 +32,7 @@ class Bot(discord.Client):
             self.author = await self.fetch_user(params_json.get("dev_ids")[0])
         if self.mode == "TESTING":
             self.ignore_errors = True
-        await self.change_presence(activity=discord.Game(f"in {self.mode} mode"))
+        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Watching the stars"))
         print(f"{self.user} is now running!")
 
     async def send_dm(self, user:discord.User, content:str) -> None:
