@@ -22,7 +22,7 @@ def member_info(id:str) -> list[dict]:
         member_list.sort()
         member_list = "\n".join(member_list)
         embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members of the Starlit System",description=member_list)
-        return [{"type":"message","embed":[embed]}]
+        return [{"type":"message","message":"","embed":[embed]}]
 
     member = members.get(id, None)
     if not member:
