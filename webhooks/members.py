@@ -17,6 +17,10 @@ async def get_or_make_webhook(channel:discord.TextChannel) -> discord.Webhook:
     return hook
 
 def member_info(id:str) -> list[dict]:
+    if id == "list":
+        member_list = "\n".join([f"{key}: {members[key]["name"] (members[key]["pronouns"])}" for key in members.keys()])
+        embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members of the Starlit System",description=member_list)
+
     member = members.get(id, None)
     if not member:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!"}]
