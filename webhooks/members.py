@@ -37,16 +37,16 @@ def get_all_replacements() -> dict:
 
 def handle_usermod(id:str, args:list[str], type:str):
     if type not in ("add", "edit"):
-        return [{"type":"message", "message":"Sorry, I don't know how to perform that action!"}]
+        return [{"type":"message", "message":"Sorry, I don't know how to perform that action!","except":True}]
     match type:
         case "add":
             if add_member(id):
-                return [{"type":"message","message":f"Added a new member with id {id}"}]
-            return [{"type":"message", "message":"Sorry, I don't know how to add that user!"}]
+                return [{"type":"message","message":f"Added a new member with id {id}","except":True}]
+            return [{"type":"message", "message":"Sorry, I don't know how to add that user!","except":True}]
         case "edit":
             if edit_member(id, args[0], args[1]):
-                return [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}"}]
-            return [{"type":"message", "message":"Sorry, I don't know how to edit that value!"}]
+                return [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True}]
+            return [{"type":"message", "message":"Sorry, I don't know how to edit that value!", "except":True}]
 
 def add_member(id:str) -> bool:
     members[id] = {"name":id.capitalize(), "username":id}

@@ -133,8 +133,11 @@ class Bot(discord.Client):
         message = await channel.fetch_message(payload.message_id)
         user:discord.User = await server.fetch_member(int(payload.user_id))
 
-        # Don't respond to our own reacts
-        if user == self.user:
+        # Don't respond to bots
+        if message.author.bot:
+            return False
+        # don't respond to webhook messages
+        if message.webhook_id is not None:
             return False
 
         character:discord.PartialEmoji = payload.emoji
@@ -155,9 +158,12 @@ class Bot(discord.Client):
         return True
 
     async def on_message(self, message:discord.Message):
-        # Don't respond to our own messages
-        if message.author == self.user:
-            return
+        # Don't respond to bots
+        if message.author.bot:
+            return False
+        # don't respond to webhook messages
+        if message.webhook_id is not None:
+            return False
 
         # Get data from the message
         username = str(message.author)
