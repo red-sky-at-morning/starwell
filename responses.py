@@ -17,10 +17,8 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
     m_list[0] = m_list[0].lower()
     m_list.append(content)
     response:list = []
-    # response += dev_commands(m_list, message, channel_id, user_id, server)
-    response += commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
-    # response += single_args_m(m_list[0], message, channel_id, user_id, server)
     response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"))
+    response += commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
     return response
 
 def commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool) -> list[dict]:
