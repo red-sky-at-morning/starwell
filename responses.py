@@ -15,7 +15,7 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
         return None
     m_list:list = content.split()
     m_list[0] = m_list[0].lower()
-    m_list.append(content)
+    # m_list.append(content)
     response:list = []
     response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"))
     response += commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
@@ -42,7 +42,7 @@ def commands(command:list[str], message:discord.Message, channel_id:int, user_id
         case "useradd":
             response += members.handle_usermod(command[1], [], "add")
         case "usermod":
-            response += members.handle_usermod(command[1], [command[2], command[3]], "edit")
+            response += members.handle_usermod(command[1], [command[2], command[3:]], "edit")
     return response
 
 def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool) -> list[dict]:
