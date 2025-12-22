@@ -17,7 +17,7 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
     m_list[0] = m_list[0].lower()
     m_list.append(content)
     response:list = []
-    response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"))
+    response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"))
     response += commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
     return response
 
@@ -45,9 +45,9 @@ def commands(command:list[str], message:discord.Message, channel_id:int, user_id
             response += members.handle_usermod(command[1], [command[2], command[-1].split(command[2])[-1].strip()], "edit")
     return response
 
-def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool) -> list[dict]:
+def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict) -> list[dict]:
     response:list = []
-    response += replacement.handle_message(command, message, user_id, ap)
+    response += replacement.handle_message(command, message, user_id, ap, curr)
     return response
 
 def handle_react(message:discord.Message, emoji:discord.PartialEmoji, count, channel_id:int, user_id:int, server:int) -> list[dict]:

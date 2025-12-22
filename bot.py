@@ -79,7 +79,7 @@ class Bot(discord.Client):
                 continue
             match item.get("type", None):
                 case "message":
-                    if self.curr_member is None or item.get("except", False) or ("no-hooks" in self.curr_member.get("tags", [])):
+                    if self.curr_member is None or item.get("except", False):
                         self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
                     else:
                         hook = await members.get_or_make_webhook(channel)
@@ -97,10 +97,10 @@ class Bot(discord.Client):
                             for i, file in enumerate(item.get("files")):
                                 item["files"][i] = await file.to_file()
                         self.last_sent_message = await hook.send(item.get("message",""), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
-                    print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", None) is not None else ""} in {channel.name} in {channel.guild.name}")
+                    print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
                 case "reply":
                     await channel.send(item.get("message","No message provided"), reference=item.get("reply", self.last_sent_message), embed=item.get("embed", None))
-                    print(f"Said {item.get('message','No message provided')} {'(with embed)' if item.get("embed", None) is not None else ""} in {channel.name} in {channel.guild.name}")
+                    print(f"Said {item.get('message','No message provided')} {'(with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
                 case "react":
                     message:discord.Message = item.get("message", self.last_sent_message)
                     if type(item.get("react")) == discord.PartialEmoji:
@@ -196,7 +196,7 @@ class Bot(discord.Client):
         if not self.verify_mode(server_id, channel_id, user_id):
             return False
 
-        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message), ap=self.ap)
+        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message), ap=self.ap, curr=self.curr_member)
         await self.handle_response(response, channel)
 
         return True
