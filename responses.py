@@ -3,6 +3,7 @@ import random
 import discord
 
 from webhooks import members
+from replacement import replacement
 
 with open("meta/params.json", "r") as params:
     params_json = json.load(params)
@@ -17,12 +18,12 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
     m_list.append(content)
     response:list = []
     # response += dev_commands(m_list, message, channel_id, user_id, server)
-    response += commands(m_list, message, channel_id, user_id, server)
+    response += commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
     # response += single_args_m(m_list[0], message, channel_id, user_id, server)
-    response += message_replacement(m_list, message, channel_id, user_id, server, kwargs.get("mentioned"))
+    response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"))
     return response
 
-def commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int) -> list[dict]:
+def commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool) -> list[dict]:
     response:list = []
     if command[0][0] != cmd_prefix:
         return response
@@ -34,16 +35,22 @@ def commands(command:list[str], message:discord.Message, channel_id:int, user_id
     if user_id not in trusted_ids:
         return response
     match command[0][1:]:
-        case "test":
-            response += [{"type":"message","message":"Hello world!","except":True}]
-        case "test2":
-            response += [{"type":"message","message":"Next message should be from a webhook...","except":True},{"type":"webhook","id":"_"},{"type":"message","message":"test"}]
+        # case "test":
+        #     response += [{"type":"message","message":"Hello world!","except":True}]
+        # case "test2":
+        #     response += [{"type":"message","message":"Next message should be from a webhook...","except":True},{"type":"webhook","id":"_"},{"type":"message","message":"test"}]
+        case "ap":
+            response += [{"type":"special","action":"toggle_ap"},{"type":"message","message":f"Toggled AutoProxy (now {not ap})","except":True}]
         case "useradd":
-            response += members.add_member()
+            response += members.handle_usermod(command[1], [], "add")
         case "usermod":
-            response += members.edit_user()
+            response += members.handle_usermod(command[1], [command[2], command[3]], "edit")
     return response
 
-def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, mentioned:bool) -> list[dict]:
+def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool) -> list[dict]:
     response:list = []
+    response += replacement.handle_message(command, message, user_id, ap)
     return response
+
+def handle_react(message:discord.Message, emoji:discord.PartialEmoji, count, channel_id:int, user_id:int, server:int) -> list[dict]:
+    return []

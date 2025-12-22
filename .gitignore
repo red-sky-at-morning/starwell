@@ -2,3 +2,6 @@
 /__pycache__
 /meta
 /venv
+
+meta/TOKEN.txt
+run_v2.sh

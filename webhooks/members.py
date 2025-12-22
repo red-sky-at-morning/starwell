@@ -2,7 +2,7 @@ import json
 import discord
 
 with open("webhooks/meta/members.json", "r") as file:
-    members = json.load(file)
+    members:dict = json.load(file)
 
 with open("meta/params.json", "r") as params:
     params_json = json.load(params)
@@ -21,19 +21,49 @@ def member_info(id:str) -> list[dict]:
     if not member:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!"}]
 
-    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=member.get("username"),description=f"@{member.get("name")} {f'({member.get("pronouns")})' if member.get("pronouns") else ""}")
+    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=f"{member.get("name")} {f'({member.get("pronouns")})' if member.get("pronouns") else ""}")
     embed.set_thumbnail(url=member.get("avatar", None))
     if member.get("desc"):
         embed.add_field(name="Description", value=member.get("desc"))
+    if member.get("tags"):
+        embed.set_footer(text=str(member.get("tags")).strip("[]").replace("'", ""))
     return [{"type":"message","message":"","embed":embed}]
 
 def get_member(id:str) -> dict:
-    return members.get(id, None)
+    return members.get(id, members.get("_"))
+
+def get_all_replacements() -> dict:
+    return {name:item.get("replacement", None) for name,item in zip(members.keys(), members.values())}
+
+def handle_usermod(id:str, args:list[str], type:str):
+    if type not in ("add", "edit"):
+        return [{"type":"message", "message":"Sorry, I don't know how to perform that action!"}]
+    match type:
+        case "add":
+            if add_member(id):
+                return [{"type":"message","message":f"Added a new member with id {id}"}]
+            return [{"type":"message", "message":"Sorry, I don't know how to add that user!"}]
+        case "edit":
+            if edit_member(id, args[0], args[1]):
+                return [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}"}]
+            return [{"type":"message", "message":"Sorry, I don't know how to edit that value!"}]
 
 def add_member(id:str) -> bool:
-    members[id] = {"name":id, "username":id}
+    members[id] = {"name":id.capitalize(), "username":id}
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
+    return True
 
 def edit_member(id:str, key:str, val:any) -> bool:
-    pass
+    if key not in ("name", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags"):
+        return False
+    if key is not "tags":
+        members[id][key] = val
+    else:
+        if val in members[id][key]:
+            members[id][key].remove(val)
+        else:
+            members[id][key].append(val)
+    with open("webhooks/meta/members.json", "w") as file:
+        json.dump(members, file)
+    return True

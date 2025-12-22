@@ -24,6 +24,7 @@ class Bot(discord.Client):
         self.last_sent_message:discord.Message
 
         self.curr_member = None
+        self.ap = False
 
     async def on_ready(self):
         with open("meta/params.json", "r") as params:
@@ -78,7 +79,7 @@ class Bot(discord.Client):
                 continue
             match item.get("type", None):
                 case "message":
-                    if self.curr_member is None or item.get("except", False):
+                    if self.curr_member is None or item.get("except", False) or ("no-hooks" in self.curr_member.get("tags", [])):
                         self.last_sent_message = await channel.send(item.get("message","No message provided"), embed=item.get("embed", None))
                     else:
                         hook = await members.get_or_make_webhook(channel)
@@ -97,7 +98,6 @@ class Bot(discord.Client):
                     print(f"Reacted to {message.content} (by {message.author}) in {message.channel} in {message.channel.guild} with {item.get('react')}")
                 case "delete":
                     try:
-                        temp_channel = await self.fetch_channel(item.get("channel"))
                         message = await channel.fetch_message(item.get("message"))
                         await message.delete()
                     except discord.errors.PrivilegedIntentsRequired:
@@ -115,6 +115,12 @@ class Bot(discord.Client):
                     msg = await self.wait_for(item.get("wait_type"), check=item.get("check"))
                     func = item.get("call", lambda x:None)
                     response.append(await func(msg.author.id, msg))
+                case "special":
+                    match item.get("action"):
+                        case "toggle_ap":
+                            self.ap = not self.ap
+                        case _:
+                            raise TypeError("Unexpected action in response")
                 case None:
                     raise TypeError("No type provided for response")
                 case _:
@@ -171,7 +177,7 @@ class Bot(discord.Client):
         if not self.verify_mode(server_id, channel_id, user_id):
             return False
 
-        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message))
+        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message), ap=self.ap)
         await self.handle_response(response, channel)
 
         return True
