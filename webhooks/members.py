@@ -28,7 +28,7 @@ def member_info(id:str) -> list[dict]:
     if not member:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!"}]
 
-    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=f"{member.get("name")}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}\{member.get("replacement")}")
+    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=f"{member.get("name")}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}\n{member.get("replacement")}")
     embed.set_thumbnail(url=member.get("avatar", None))
     if member.get("desc"):
         embed.add_field(name="Description", value=member.get("desc"))
