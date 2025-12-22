@@ -27,7 +27,7 @@ def member_info(id:str) -> list[dict]:
         embed.add_field(name="Description", value=member.get("desc"))
     if member.get("tags"):
         embed.set_footer(text=str(member.get("tags")).strip("[]").replace("'", ""))
-    return [{"type":"message","message":"","embed":embed}]
+    return [{"type":"message","message":"","embed":[embed]}]
 
 def get_member(id:str) -> dict:
     return members.get(id, members.get("_"))
@@ -60,10 +60,12 @@ def edit_member(id:str, key:str, val:any) -> bool:
     if key != "tags":
         members[id][key] = val
     else:
-        if val in members[id][key]:
-            members[id][key].remove(val)
+        tags = members[id].get(key, [])
+        if val in tags:
+            tags.remove(val)
         else:
-            members[id][key].append(val)
+            tags.append(val)
+        members[id][key] = tags
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
     return True

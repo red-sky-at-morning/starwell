@@ -13,14 +13,14 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool) ->
         return []
     member_name = has_replacement(text)
     if member_name is None:
-        return [{"type":"delete","message":message.id},{"type":"message","message":text}] if auto else []
+        return [{"type":"delete","message":message.id},{"type":"message","message":text,"reference":message.reference}] if auto else []
     member = members.get_member(member_name)
-    print(member)
+    # print(member)
     if "no-hooks" in member.get("tags", []):
         return []
     if not "keep-repl" in member.get("tags", []):
         text = trim_replacement(text, member.get("replacement"))
-    return [{"type":"delete","message":message.id},{"type":"webhook","id":member_name},{"type":"message","message":text}]
+    return [{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":message.embeds,"reference":message.reference},{"type":"delete","message":message.id}]
     return []
 
 def has_replacement(text:str) -> str | None:

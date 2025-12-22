@@ -80,10 +80,23 @@ class Bot(discord.Client):
             match item.get("type", None):
                 case "message":
                     if self.curr_member is None or item.get("except", False) or ("no-hooks" in self.curr_member.get("tags", [])):
-                        self.last_sent_message = await channel.send(item.get("message","No message provided"), embed=item.get("embed", None))
+                        self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
                     else:
                         hook = await members.get_or_make_webhook(channel)
-                        self.last_sent_message = await hook.send(item.get("message",""), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embed=item.get("embed", None))
+                        if item.get("reference") is not None:
+                            resolve = item.get("reference").resolved
+                            if resolve != None:
+                                embed = discord.Embed(description=f"[Reply to]({resolve.jump_url}): {resolve.content}")
+                                print(resolve.author.display_avatar.url)
+                                embed.set_author(name=resolve.author.name, icon_url=resolve.author.display_avatar.url)
+                                if item.get("embed") != None:
+                                    item["embed"].insert(0, embed)
+                                else:
+                                    item["embed"] = [embed]
+                        if item.get("files") is not None:
+                            for i, file in enumerate(item.get("files")):
+                                item["files"][i] = await file.to_file()
+                        self.last_sent_message = await hook.send(item.get("message",""), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
                     print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", None) is not None else ""} in {channel.name} in {channel.guild.name}")
                 case "reply":
                     await channel.send(item.get("message","No message provided"), reference=item.get("reply", self.last_sent_message), embed=item.get("embed", None))
