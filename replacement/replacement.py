@@ -13,14 +13,14 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
         return []
     member_name = has_replacement(text)
     if member_name is None:
-        return [{"type":"message","message":text,"files":message.attachments,"embed":message.embeds,"reference":message.reference},{"type":"delete","message":message.id}] if (auto and "no-hooks" not in curr_member.get("tags", [])) else []
+        return [{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message.id}] if (auto and "no-hooks" not in curr_member.get("tags", [])) else []
     member = members.get_member(member_name)
     # print(member)
     if "no-hooks" in member.get("tags", []):
         return [{"type":"webhook","id":member_name}]
     if not "keep-repl" in member.get("tags", []):
         text = trim_replacement(text, member.get("replacement"))
-    return [{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":message.embeds,"reference":message.reference},{"type":"delete","message":message.id}]
+    return [{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message.id}]
 
 def has_replacement(text:str) -> str | None:
     replacements = members.get_all_replacements()
