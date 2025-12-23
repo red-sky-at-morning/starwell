@@ -8,8 +8,12 @@ with open("meta/params.json", "r") as params:
     params_json = json.load(params)
     trusted_ids = params_json.get("dev_ids")
 
+exceptions:list = ["&ap"]
+
 def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict) -> list[dict]:
     if user_id not in trusted_ids:
+        return []
+    if text in exceptions:
         return []
     member_name = has_replacement(text)
     if member_name is None:
