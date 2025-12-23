@@ -38,7 +38,7 @@ def commands(command:list[str], message:discord.Message, channel_id:int, user_id
         # case "test2":
         #     response += [{"type":"message","message":"Next message should be from a webhook...","except":True},{"type":"webhook","id":"_"},{"type":"message","message":"test"}]
         case "ap":
-            response += [{"type":"special","action":"toggle_ap"},{"type":"message","message":f"Toggled AutoProxy (now {not ap})","except":True}]
+            response += [{"type":"special","action":"toggle_ap"},{"type":"react","react":"🔴" if ap else "🟢","message":message}]
         case "useradd":
             response += members.handle_usermod(command[1], [], "add")
         case "usermod":

@@ -13,6 +13,8 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
         return []
     member_name = has_replacement(text)
     if member_name is None:
+        if curr_member == None:
+            return []
         return [{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message.id}] if (auto and "no-hooks" not in curr_member.get("tags", [])) else []
     member = members.get_member(member_name)
     # print(member)

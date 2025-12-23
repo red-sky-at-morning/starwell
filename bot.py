@@ -21,7 +21,7 @@ class Bot(discord.Client):
         self.ignore_errors:bool = True
 
         self.author:discord.User
-        self.last_sent_message:discord.Message
+        self.last_sent_message:discord.Message = None
 
         self.curr_member = None
         self.ap = False
