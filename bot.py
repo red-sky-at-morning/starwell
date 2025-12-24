@@ -147,6 +147,7 @@ class Bot(discord.Client):
                     match item.get("action"):
                         case "toggle_ap":
                             self.ap = not self.ap
+                            await self.change_presence(activity=discord.CustomActivity(name=f"{"🟢" if self.ap else "🔴"} | {self.curr_member.get("presence", "watching the stars")}"))
                         case _:
                             raise TypeError("Unexpected action in response")
                 case None:

@@ -49,7 +49,7 @@
         "avatar": "https://blue.skiesatmorning.com/shr/ryzya645nq8r/pfp_alt.png",
         "desc": "something with feathers and sharp teeth",
         "replacement": "%text% ---",
-        "status": "making trouble"
+        "presence": "making trouble"
     },
     "blue": {
         "name": "Blue",
