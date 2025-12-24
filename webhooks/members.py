@@ -69,7 +69,7 @@ def add_member(id:str) -> bool:
     return True
 
 def edit_member(id:str, key:str, val:any) -> bool:
-    if key not in ("name", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags"):
+    if key not in ("name", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "status"):
         return False
     if key != "tags":
         members[id][key] = val
