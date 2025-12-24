@@ -28,7 +28,10 @@ def member_info(id:str) -> list[dict]:
     if not member:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!"}]
 
-    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=f"{member.get("name")}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}{f"\nReplacement: {member.get("replacement") if member.get("replacement") else ""}"}")
+    embed_desc = f"{member.get("name")}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
+    embed_desc += f"\nText: {member.get("replacement") if member.get("replacement") else "None"}"
+    embed_desc += f"{f'\nStatus: {member.get("presence")}' if member.get("presence") else ""}"
+    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
     if member.get("desc"):
         embed.add_field(name="Description", value=member.get("desc"))
@@ -38,6 +41,10 @@ def member_info(id:str) -> list[dict]:
 
 def get_member(id:str) -> dict:
     return members.get(id, members.get("_"))
+
+def get_member_by_username(username:str) -> str:
+    filtered = list(filter(lambda x: x.get("username") == username, list(members.copy().values())))
+    return [key for key, value in members.items() if value == filtered[0]][0]
 
 def get_all_replacements() -> dict:
     return {name:item.get("replacement", None) for name,item in zip(members.keys(), members.values())}

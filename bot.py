@@ -25,6 +25,7 @@ class Bot(discord.Client):
 
         self.curr_member = None
         self.ap = False
+        self.default_member = self.curr_member
 
     async def on_ready(self):
         with open("meta/params.json", "r") as params:
@@ -32,7 +33,7 @@ class Bot(discord.Client):
             self.author = await self.fetch_user(params_json.get("dev_ids")[0])
         if self.mode == "TESTING":
             self.ignore_errors = True
-        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Watching the stars"))
+        await self.change_presence(activity=discord.CustomActivity(name="🔴 | watching the stars"))
         print(f"{self.user} is now running!")
 
     async def send_dm(self, user:discord.User, content:str) -> None:
@@ -79,10 +80,12 @@ class Bot(discord.Client):
                 continue
             match item.get("type", None):
                 case "message":
+                    # send messages as bot
                     if self.curr_member is None or item.get("except", False):
                         self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
                     else:
                         hook = await members.get_or_make_webhook(channel)
+                        # replying
                         if item.get("reference") is not None:
                             resolve = item.get("reference").resolved
                             if resolve != None:
@@ -93,9 +96,14 @@ class Bot(discord.Client):
                                     item["embed"].insert(0, embed)
                                 else:
                                     item["embed"] = [embed]
+                        # files
                         if item.get("files") is not None:
                             for i, file in enumerate(item.get("files")):
                                 item["files"][i] = await file.to_file()
+                        # send the message
+                        if item.get("use-default", False):
+                            self.last_sent_message = await hook.send(item.get("message",""), username=self.default_member.get("username", None), avatar_url=self.default_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
+                            continue
                         self.last_sent_message = await hook.send(item.get("message",""), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
                     print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
                 case "reply":
@@ -119,7 +127,14 @@ class Bot(discord.Client):
                     print(f"Sleeping for {item.get('time', 0)} seconds...")
                     await asyncio.sleep(item.get("time"))
                 case "webhook":
-                    self.curr_member = members.get_member(item.get("id", "_"))
+                    if item.get("id", "_") != None:
+                        self.curr_member = members.get_member(item.get("id", "_"))
+                    if self.ap:
+                        await self.change_presence(activity=discord.CustomActivity(name=f"🟢 | {self.curr_member.get("presence", "watching the stars")}"))
+                    if item.get("default", False):
+                        self.default_member = self.curr_member
+                        print(self.default_member)
+                        await self.change_presence(activity=discord.CustomActivity(name=f"🔴 | {self.curr_member.get("presence", "watching the stars")}"))
                 case "error":
                     error = item.get("error")
                     print(f"Raising error {error}")
@@ -196,7 +211,7 @@ class Bot(discord.Client):
         if not self.verify_mode(server_id, channel_id, user_id):
             return False
 
-        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message), ap=self.ap, curr=self.curr_member)
+        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message), ap=self.ap, curr=self.curr_member, default=self.default_member)
         await self.handle_response(response, channel)
 
         return True
@@ -221,5 +236,5 @@ if __name__ == "__main__":
     intents = discord.Intents.default()
     intents.message_content = True
     intents.reactions = True
-    eclipse = Bot(intents=intents)
-    eclipse.startup()
+    starwell = Bot(intents=intents)
+    starwell.startup()

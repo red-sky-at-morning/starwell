@@ -1,0 +1,2 @@
+- reimplement editing with edit coroutine
+- fix proxying with attachment only

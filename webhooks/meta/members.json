@@ -15,6 +15,7 @@
         "color": "#cb2956",
         "desc": "dreaming together about the fairer weather",
         "replacement": "\\ %text%",
+        "presence": "watching the skies",
         "tags": [
             "no-hooks"
         ]
@@ -26,7 +27,8 @@
         "avatar": "https://blue.skiesatmorning.com/shr/ryzya645nq8r/pfp_byte.png",
         "color": "#8aadf4",
         "desc": "world's first computergirl to build her own body (twice)",
-        "replacement": "vvv %text%"
+        "replacement": "vvv %text%",
+        "presence": "playing with code"
     },
     "luna": {
         "name": "Luna",
@@ -37,7 +39,8 @@
         "tags": [
             "keep-repl"
         ],
-        "pronouns": "she/they"
+        "pronouns": "she/they",
+        "presence": "singing under the rainbow"
     },
     "kitsune": {
         "name": "Kitsune",
