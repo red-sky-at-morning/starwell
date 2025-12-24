@@ -54,7 +54,8 @@
         "name": "Blue",
         "username": "blueskiesatsunset",
         "pronouns": "she/her",
-        "avatar": "https://blue.skiesatmorning.com/shr/ryzya645nq8r/pfp_sky.png"
+        "avatar": "https://blue.skiesatmorning.com/shr/ryzya645nq8r/pfp_sky.png",
+        "replacement": "blue: text"
     },
     "proxy": {
         "name": "Proxy",
