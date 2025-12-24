@@ -48,7 +48,8 @@
         "pronouns": "it/any",
         "avatar": "https://blue.skiesatmorning.com/shr/ryzya645nq8r/pfp_alt.png",
         "desc": "something with feathers and sharp teeth",
-        "replacement": "%text% ---"
+        "replacement": "%text% ---",
+        "status": "making trouble"
     },
     "blue": {
         "name": "Blue",
