@@ -37,7 +37,7 @@ def member_info(id:str) -> list[dict]:
         embed.add_field(name="Description", value=member.get("desc"))
     if member.get("tags"):
         embed.set_footer(text=str(member.get("tags")).strip("[]").replace("'", ""))
-    return [{"type":"message","message":"","embed":[embed]}]
+    return [{"type":"message","message":"","embed":[embed], "except":True}]
 
 def get_member(id:str) -> dict:
     return members.get(id, members.get("_"))
