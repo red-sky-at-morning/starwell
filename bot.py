@@ -138,10 +138,17 @@ class Bot(discord.Client):
                     error = item.get("error")
                     print(f"Raising error {error}")
                     raise error
-                case "input":
-                    msg = await self.wait_for(item.get("wait_type"), check=item.get("check"))
+                case "call":
+                    if item.get("wait_type", None) is not None:
+                        msg = await self.wait_for(item.get("wait_type"), check=item.get("check"))
+                    else:
+                        msg = item.get("message")
                     func = item.get("call", lambda x:None)
-                    response.append(await func(msg.author.id, msg))
+                    resp = await func(msg.author.id, msg)
+                    if (item.get("kill") and not resp):
+                        return
+                    if type(resp) == dict:
+                        response.append(resp)
                 case "special":
                     match item.get("action"):
                         case "toggle_ap":
