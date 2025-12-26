@@ -133,8 +133,7 @@ class Bot(discord.Client):
                         await self.change_presence(activity=discord.CustomActivity(name=f"🟢 | {self.curr_member.get("presence", "watching the stars")}"))
                     if item.get("default", False):
                         self.default_member = self.curr_member
-                        print(self.default_member)
-                        await self.change_presence(activity=discord.CustomActivity(name=f"🔴 | {self.curr_member.get("presence", "watching the stars")}"))
+                        await self.change_presence(activity=discord.CustomActivity(name=f"🔴 | {self.default_member.get("presence", "watching the stars")}"))
                 case "error":
                     error = item.get("error")
                     print(f"Raising error {error}")
@@ -147,6 +146,7 @@ class Bot(discord.Client):
                     match item.get("action"):
                         case "toggle_ap":
                             self.ap = not self.ap
+                            self.default_member = self.curr_member
                             await self.change_presence(activity=discord.CustomActivity(name=f"{"🟢" if self.ap else "🔴"} | {self.curr_member.get("presence", "watching the stars")}"))
                         case _:
                             raise TypeError("Unexpected action in response")

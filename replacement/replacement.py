@@ -14,9 +14,9 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
     if text[0] == "&":
         return []
     
-    print(default_member)
+    print(f"default_member: {default_member}")
     member_name = has_replacement(text)
-    print(member_name)
+    print(f"text member: {member_name}")
     
     if member_name is None:
         if auto:
@@ -46,7 +46,7 @@ def has_replacement(text:str) -> str | None:
             continue
         repl = re.escape(repl)
         repl = f"^{repl.replace("%text%", ".*")}$"
-        repl = re.compile(repl)
+        repl = re.compile(repl, flags=re.DOTALL)
 
         match = repl.match(text)
         if match is not None:
