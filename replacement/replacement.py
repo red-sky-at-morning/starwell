@@ -13,6 +13,8 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
         return []
     if len(text)>= 1 and text[0] == "&":
         return []
+    if message.type not in (discord.MessageType.default, discord.MessageType.reply):
+        return []
     
     print(f"default_member: {default_member}")
     member_name = has_replacement(text)

@@ -81,8 +81,6 @@ class Bot(discord.Client):
             match item.get("type", None):
                 case "message":
                     # send messages as bot
-                    if not item.get("message") and not item.get("embed") and not item.get("files"):
-                        continue
                     if self.curr_member is None or item.get("except", False):
                         self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
                     else:
