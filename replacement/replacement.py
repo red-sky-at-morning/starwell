@@ -11,7 +11,7 @@ with open("meta/params.json", "r") as params:
 def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict, default_member:dict) -> list[dict]:
     if user_id not in trusted_ids:
         return []
-    if text[0] == "&":
+    if len(text)>= 1 and text[0] == "&":
         return []
     
     print(f"default_member: {default_member}")

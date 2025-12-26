@@ -12,7 +12,7 @@ with open("meta/params.json", "r") as params:
 
 def handle_message(message: discord.Message, content:str, channel_id, user_id:int, server:int, **kwargs) -> list[dict]:
     if not content:
-        return None
+        return message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"))
     m_list:list = content.split()
     m_list[0] = m_list[0].lower()
     m_list.append(content)
