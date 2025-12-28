@@ -109,6 +109,18 @@ class Bot(discord.Client):
                 case "reply":
                     await channel.send(item.get("message","No message provided"), reference=item.get("reply", self.last_sent_message), embed=item.get("embed", None))
                     print(f"Said {item.get('message','No message provided')} {'(with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
+                case "edit":
+                    # send messages as bot
+                    if self.curr_member is None or item.get("except", False):
+                        self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
+                    else:
+                        hook = await members.get_or_make_webhook(channel)
+                        # files
+                        if item.get("files") is not None:
+                            for i, file in enumerate(item.get("files")):
+                                item["files"][i] = await file.to_file()
+                        await hook.edit_message(item.get("message",""), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
+                    print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
                 case "react":
                     message:discord.Message = item.get("message", self.last_sent_message)
                     if type(item.get("react")) == discord.PartialEmoji:

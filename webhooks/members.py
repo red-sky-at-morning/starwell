@@ -29,12 +29,15 @@ def member_info(id:str) -> list[dict]:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!"}]
 
     embed_desc = f"{member.get("name")}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
-    embed_desc += f"\nText: {member.get("replacement") if member.get("replacement") else "None"}"
-    embed_desc += f"{f'\nStatus: {member.get("presence")}' if member.get("presence") else ""}"
+    embed_desc += f"\n{member.get("desc")}"
+    # embed_desc += f"\nText: {member.get("replacement") if member.get("replacement") else "None"}"
+    # embed_desc += f"{f'\nStatus: {member.get("presence")}' if member.get("presence") else ""}"
     embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
-    if member.get("desc"):
-        embed.add_field(name="Description", value=member.get("desc"))
+    if member.get("presence"):
+        embed.add_field(name="Status", value=member.get("presence"), inline=False)
+    if member.get("replacement"):
+        embed.add_field(name="Text", value=member.get("replacement"), inline=False)
     if member.get("tags"):
         embed.set_footer(text=str(member.get("tags")).strip("[]").replace("'", ""))
     return [{"type":"message","message":"","embed":[embed], "except":True}]
@@ -49,17 +52,21 @@ def get_member_by_username(username:str) -> str:
 def get_all_replacements() -> dict:
     return {name:item.get("replacement", None) for name,item in zip(members.keys(), members.values())}
 
-def handle_usermod(id:str, args:list[str], type:str):
+def handle_usermod(id:str, args:list[str], type:str, curr:str):
     if type not in ("add", "edit"):
         return [{"type":"message", "message":"Sorry, I don't know how to perform that action!","except":True}]
     match type:
         case "add":
             if add_member(id):
-                return [{"type":"message","message":f"Added a new member with id {id}","except":True}]
+                out = [{"type":"message","message":f"Added a new member with id {id}","except":True}]
+                return out
             return [{"type":"message", "message":"Sorry, I don't know how to add that user!","except":True}]
         case "edit":
             if edit_member(id, args[0], args[1]):
-                return [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True}]
+                out = [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True}]
+                if get_member_by_username(curr) == id:
+                    out.append({"type":"webhook","id":id})
+                return out
             return [{"type":"message", "message":"Sorry, I don't know how to edit that value!", "except":True}]
 
 def add_member(id:str) -> bool:

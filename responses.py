@@ -20,7 +20,7 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
     response:list = []
     response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"))
     response += public_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
-    response += member_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
+    response += member_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"))
     response += reply_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
     return response
 
@@ -37,7 +37,7 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
     
     return response
 
-def member_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool):
+def member_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict):
     response:list = []
     if user_id not in trusted_ids:
         return response
@@ -54,9 +54,9 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
             else:
                 response += [{"type":"webhook", "id":command[1], "default":True}]
         case "useradd":
-            response += members.handle_usermod(command[1], [], "add")
+            response += members.handle_usermod(command[1], [], "add", curr.get("name", "_"))
         case "usermod":
-            response += members.handle_usermod(command[1], [command[2], command[-1].split(command[2])[-1].strip()], "edit")
+            response += members.handle_usermod(command[1], [command[2], command[-1].split(command[2])[-1].strip()], "edit", curr.get("username", "_"))
     return response
 
 def reply_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool):
