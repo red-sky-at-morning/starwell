@@ -23,7 +23,7 @@ class Bot(discord.Client):
         self.author:discord.User
         self.last_sent_message:discord.Message = None
 
-        self.curr_member = None
+        self.curr_member = members.get_member("sky")
         self.ap = False
         self.default_member = self.curr_member
 
@@ -110,17 +110,16 @@ class Bot(discord.Client):
                     await channel.send(item.get("message","No message provided"), reference=item.get("reply", self.last_sent_message), embed=item.get("embed", None))
                     print(f"Said {item.get('message','No message provided')} {'(with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
                 case "edit":
-                    # send messages as bot
-                    if self.curr_member is None or item.get("except", False):
-                        self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
-                    else:
-                        hook = await members.get_or_make_webhook(channel)
-                        # files
-                        if item.get("files") is not None:
-                            for i, file in enumerate(item.get("files")):
-                                item["files"][i] = await file.to_file()
-                        await hook.edit_message(item.get("message",""), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
-                    print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
+                    # id: message id, message:content, embed:embeds (append to message embeds) file:files (append to message files)
+                    hook:discord.Webhook = await members.get_or_make_webhook(channel)
+                    message:discord.WebhookMessage = await hook.fetch_message(item.get("id"))
+                    old_content = message.content
+                    content:str = item.get("message", message.content)
+                    embeds:list = message.embeds.copy()
+                    embeds += item.get("embeds")
+                    
+                    await message.edit(content=content, embeds=embeds)
+                    print(f"Edited message in {channel.name} in {channel.guild.name} from {old_content} to {content}")
                 case "react":
                     message:discord.Message = item.get("message", self.last_sent_message)
                     if type(item.get("react")) == discord.PartialEmoji:

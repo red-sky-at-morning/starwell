@@ -28,12 +28,16 @@ def member_info(id:str) -> list[dict]:
     if not member:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!"}]
 
-    embed_desc = f"{member.get("name")}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
+    names_l = member.get("names").copy()
+    del names_l[member.get("name", 0)]
+    embed_desc = f"{member.get("names")[member.get("name", 0)]}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
     embed_desc += f"\n{member.get("desc")}"
-    # embed_desc += f"\nText: {member.get("replacement") if member.get("replacement") else "None"}"
-    # embed_desc += f"{f'\nStatus: {member.get("presence")}' if member.get("presence") else ""}"
+    
     embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
+
+    if names_l:
+        embed.add_field(name="Aka", value=", ".join(names_l), inline=False)
     if member.get("presence"):
         embed.add_field(name="Status", value=member.get("presence"), inline=False)
     if member.get("replacement"):
@@ -70,23 +74,30 @@ def handle_usermod(id:str, args:list[str], type:str, curr:str):
             return [{"type":"message", "message":"Sorry, I don't know how to edit that value!", "except":True}]
 
 def add_member(id:str) -> bool:
-    members[id] = {"name":id.capitalize(), "username":id}
+    members[id] = {"name":0, "names":[id.capitalize()], "username":id}
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
     return True
 
 def edit_member(id:str, key:str, val:any) -> bool:
-    if key not in ("name", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "presence"):
+    if key not in ("name", "names", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "presence"):
         return False
-    if key != "tags":
-        members[id][key] = val
-    else:
-        tags = members[id].get(key, [])
-        if val in tags:
-            tags.remove(val)
-        else:
-            tags.append(val)
-        members[id][key] = tags
+    match key:
+        case "name":
+            if val in members[id]["names"]:
+                members[id][key] = members[id]["names"].index(val)
+            else:
+                members[id]["names"].append(val)
+                members[id][key] = members[id]["names"].index(val)
+        case "tags" | "names":
+            tags = members[id].get(key, [])
+            if val in tags:
+                tags.remove(val)
+            else:
+                tags.append(val)
+            members[id][key] = tags
+        case _:
+            members[id][key] = val
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
     return True

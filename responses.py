@@ -78,22 +78,17 @@ def reply_commands(command:list[str], message:discord.Message, channel_id:int, u
         except (discord.errors.NotFound, discord.errors.HTTPException):
             return False
     response += [{"type":"call", "call":check_resp, "message":rp_message, "kill":True}]
-    # response += [{"type":"message","message":"yep thats a member webhook message","except":"true"}]
 
     match command[0][1:]:
         case "rp":
-            if rp_message is not None:
-                response += [{"type":"webhook", "id": command[1]}]
-                response += [{"type":"message","message":rp_message.content,"files":rp_message.attachments,"embed":list(filter(lambda x: x.type == "rich", rp_message.embeds)),"reference":rp_message.reference}]
-                response += [{"type":"delete","message":message.id}, {"type":"delete","message":rp_message.id}]
+            response += [{"type":"webhook", "id": command[1]}]
+            response += [{"type":"message","message":rp_message.content,"files":rp_message.attachments,"embed":list(filter(lambda x: x.type == "rich", rp_message.embeds)),"reference":rp_message.reference}]
+            response += [{"type":"delete","message":message.id}, {"type":"delete","message":rp_message.id}]
         case "edit":
-            if rp_message is not None:
-                response += [{"type":"webhook", "id": members.get_member_by_username(rp_message.author.display_name)}]
-                response += [{"type":"message","message":command[-1].strip("&edit"),"files":rp_message.attachments,"embed":list(filter(lambda x: x.type == "rich", rp_message.embeds)),"reference":rp_message.reference}]
-                response += [{"type":"delete","message":message.id}, {"type":"delete","message":rp_message.id}]
+            response += [{"type":"edit", "id":rp_message.id, "message":command[-1].removeprefix("&edit "), "embeds":message.embeds}]
+            response += [{"type":"delete","message":message.id}]
         case "del":
-            if rp_message is not None:
-                response += [{"type":"delete","message":message.id}, {"type":"delete","message":rp_message.id}]
+            response += [{"type":"delete","message":message.id}, {"type":"delete","message":rp_message.id}]
     return response
 
 def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict, default:dict) -> list[dict]:
