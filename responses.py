@@ -93,6 +93,8 @@ def reply_commands(command:list[str], message:discord.Message, channel_id:int, u
 
 def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict, default:dict) -> list[dict]:
     response:list = []
+    if user_id not in trusted_ids:
+        return response
     response += replacement.handle_message(command, message, user_id, ap, curr, default)
     return response
 

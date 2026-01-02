@@ -1,16 +1,9 @@
 import re
-import json
 import discord
 
 from webhooks import members
 
-with open("meta/params.json", "r") as params:
-    params_json = json.load(params)
-    trusted_ids = params_json.get("dev_ids")
-
 def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict, default_member:dict) -> list[dict]:
-    if user_id not in trusted_ids:
-        return []
     if len(text)>= 1 and text[0] == "&":
         return []
     if message.type not in (discord.MessageType.default, discord.MessageType.reply):
