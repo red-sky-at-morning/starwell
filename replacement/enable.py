@@ -59,7 +59,7 @@ def get_formatted_channel(channel:discord.TextChannel, server:discord.Guild) -> 
     desc = f"<#{channel.id}> is **{"enabled" if state else "disabled"}**"
     if not state:
         desc += f" because of: {reason if reason is not None else "(no reason provided)"}"
-    elif (channel.id.__str__() in data[server.id.__str__()]["whitelist"]):
+    elif (channel.id.__str__() in data.get(server.id.__str__(), {}).get("whitelist", [])):
         desc += f" (whitelist)"
     embed = discord.Embed(color=discord.Color.random(),description=desc)
     
