@@ -4,6 +4,7 @@ import discord
 
 from webhooks import members
 from replacement import replacement
+from replacement import enable
 
 with open("meta/params.json", "r") as params:
     params_json = json.load(params)
@@ -32,8 +33,8 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
     match command[0][1:]:
         case "member":
             response += members.member_info(command[1].lower())
-    # private commands
-    
+        case "chinfo":
+            response += enable.get_formatted_channel(message.channel, message.channel.guild)
     
     return response
 
@@ -42,10 +43,6 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
     if user_id not in trusted_ids:
         return response
     match command[0][1:]:
-        # case "test":
-        #     response += [{"type":"message","message":"Hello world!","except":True}]
-        # case "test2":
-        #     response += [{"type":"message","message":"Next message should be from a webhook...","except":True},{"type":"webhook","id":"_"},{"type":"message","message":"test"}]
         case "ap":
             response += [{"type":"special","action":"toggle_ap"},{"type":"react","react":"🔴" if ap else "🟢","message":message}]
         case "setfront":
@@ -57,6 +54,8 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
             response += members.handle_usermod(command[1], [], "add", curr.get("name", "_"))
         case "usermod":
             response += members.handle_usermod(command[1], [command[2], command[-1].split(command[2])[-1].strip()], "edit", curr.get("username", "_"))
+        case "chmod" | "svmod":
+            response += enable.handle(command[0][1:], command, message.channel, message.channel.guild)
     return response
 
 def reply_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool):
@@ -68,6 +67,7 @@ def reply_commands(command:list[str], message:discord.Message, channel_id:int, u
     if message.reference.resolved is None:
         return response
     rp_message = message.reference.resolved
+
     async def check_resp(id, message) -> bool:
         if id in trusted_ids:
             return True
@@ -77,11 +77,13 @@ def reply_commands(command:list[str], message:discord.Message, channel_id:int, u
             return True
         except (discord.errors.NotFound, discord.errors.HTTPException):
             return False
+    
     response += [{"type":"call", "call":check_resp, "message":rp_message, "kill":True}]
 
     match command[0][1:]:
         case "rp":
-            response += [{"type":"webhook", "id": command[1]}]
+            if len(command) > 2:
+                response += [{"type":"webhook", "id": command[1]}]
             response += [{"type":"message","message":rp_message.content,"files":rp_message.attachments,"embed":list(filter(lambda x: x.type == "rich", rp_message.embeds)),"reference":rp_message.reference}]
             response += [{"type":"delete","message":message.id}, {"type":"delete","message":rp_message.id}]
         case "edit":

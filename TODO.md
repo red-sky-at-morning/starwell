@@ -1,0 +1,3 @@
+- global disabled channels/servers
+    - pass an id
+    - otherwise use current channel

@@ -2,17 +2,20 @@ import re
 import discord
 
 from webhooks import members
+from replacement import enable
 
 def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict, default_member:dict) -> list[dict]:
     if len(text)>= 1 and text[0] == "&":
         return []
     if message.type not in (discord.MessageType.default, discord.MessageType.reply):
         return []
-    
+    if not enable.get_channel_state(message.channel.id, message.channel.guild.id):
+        return []
+
     print(f"default_member: {default_member}")
     member_name = has_replacement(text)
     print(f"text member: {member_name}")
-    
+
     if member_name is None:
         if auto:
             if curr_member == None or "no-hooks" in curr_member.get("tags", []):

@@ -1,0 +1,30 @@
+{
+    "_": {
+        "enabled": true,
+        "blacklist": {},
+        "whitelist": []
+    },
+    "-1": {
+        "enabled": true,
+        "reason": null,
+        "whitelist": [
+            "-1",
+            "-2"
+        ]
+    },
+    "677632068041310208": {
+        "enabled": true,
+        "blacklist": {
+            "966488795065229342": "testing"
+        },
+        "whitelist": []
+    },
+    "1418024837603131546": {
+        "enabled": false,
+        "reason": "testing",
+        "blacklist": {},
+        "whitelist": [
+            "1423739695774433353"
+        ]
+    }
+}
