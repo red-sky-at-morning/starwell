@@ -66,6 +66,9 @@ def get_formatted_channel(channel:discord.TextChannel, server:discord.Guild) -> 
     return [{"type":"message","message":"","embed":[embed],"except":True}]
 
 def set_channel_val(channel:int, server:int, state:bool, reason: str | None) -> None:
+    if data.get(server.__str__(), None) is None:
+        data[server.__str__()] = {"enabled":True,"reason":None,"blacklist":{},"whitelist":[]}
+
     if state:
         data[server.__str__()]["whitelist"].append(channel.__str__())
         if (channel.__str__() in data[server.__str__()]["blacklist"].keys()):
@@ -78,6 +81,9 @@ def set_channel_val(channel:int, server:int, state:bool, reason: str | None) -> 
         json.dump(data, file)
 
 def set_server_val(server:int, state:bool, reason: str | None) -> None:
+    if data.get(server.__str__(), None) is None:
+        data[server.__str__()] = {"enabled":True,"reason":None,"blacklist":{},"whitelist":[]}
+
     data[server.__str__()]["enabled"] = state
     data[server.__str__()]["reason"] = reason
     with open("replacement/meta/servers.json", "w") as file:
