@@ -18,10 +18,10 @@ async def get_or_make_webhook(channel:discord.TextChannel) -> discord.Webhook:
 
 def member_info(id:str) -> list[dict]:
     if id == "list":
-        member_list = [f"{key}: {members[key].get("name", "")} ({members[key].get("pronouns", "none set")})" if key != "_" else "" for key in members.keys()]
+        member_list = [f"{key}: {members[key].get("names", "")[members[key].get("name")]} ({members[key].get("pronouns", "none set")})" if key != "_" else "" for key in members.keys()]
         member_list.sort()
         member_list = "\n".join(member_list)
-        embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members of the Starlit System",description=member_list)
+        embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members of the Daybreak System",description=member_list)
         return [{"type":"message","message":"","embed":[embed],"except":True}]
 
     member = members.get(id, None)
