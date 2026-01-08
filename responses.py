@@ -35,8 +35,8 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
             response += members.member_info(command[1].lower())
         case "chinfo":
             response += enable.get_formatted_channel(message.channel, message.channel.guild)
-        case "test1":
-            response += [{"type":"react","message":message,"react":discord.PartialEmoji.from_str("<:fuwaaa:1458680563375411375>")}]
+        # case "test1":
+        #     response += [{"type":"react","message":message,"react":discord.PartialEmoji.from_str("<:fuwaaa:1458680563375411375>")}]
 
     return response
 
