@@ -55,7 +55,6 @@ class Bot(discord.Client):
         if mode not in self.modes:
             raise TypeError(f"Mode not found in mode list: {mode}")
         print(f"Switching to mode {mode}")
-        await self.change_presence(activity=discord.Game(f"in {mode} mode"))
         self.mode = mode
     
     def verify_mode(self, server:int, channel:int, user:int) -> bool:
@@ -141,10 +140,10 @@ class Bot(discord.Client):
                     if item.get("id", "_") != None:
                         self.curr_member = members.get_member(item.get("id", "_"))
                     if self.ap:
-                        await self.change_presence(activity=discord.CustomActivity(name=f"🟢 | {self.curr_member.get("presence", "watching the stars")}"))
+                        response.append({"type":"presence", "default":True})
                     if item.get("default", False):
                         self.default_member = self.curr_member
-                        await self.change_presence(activity=discord.CustomActivity(name=f"🔴 | {self.default_member.get("presence", "watching the stars")}"))
+                        response.append({"type":"presence", "default":True})
                 case "error":
                     error = item.get("error")
                     print(f"Raising error {error}")
@@ -155,17 +154,29 @@ class Bot(discord.Client):
                     else:
                         msg = item.get("message")
                     func = item.get("call", lambda x:None)
-                    resp = await func(msg.author.id, msg)
+                    resp = await func(self, msg.author.id, msg)
                     if (item.get("kill") and not resp):
                         return
                     if type(resp) == dict:
                         response.append(resp)
+                case "presence":
+                    if item.get("default", False):
+                        presence = f"{self.curr_member.get("presence", "watching the stars")}"
+                    else:
+                        presence = item.get("presence", f"{self.curr_member.get("presence", "watching the stars")}")
+                    
+                    emoji = "🟢" if self.ap else "🔴"
+                    if self.curr_member.get("emoji", None) is not None:
+                        emoji += self.curr_member.get("emoji")
+                    
+                    presence = f"{emoji} | {presence}"
+                    await self.change_presence(activity=discord.CustomActivity(name=presence))
                 case "special":
                     match item.get("action"):
                         case "toggle_ap":
                             self.ap = not self.ap
                             self.default_member = self.curr_member
-                            await self.change_presence(activity=discord.CustomActivity(name=f"{"🟢" if self.ap else "🔴"} | {self.curr_member.get("presence", "watching the stars")}"))
+                            response.append({"type":"presence", "default":True})
                         case _:
                             raise TypeError("Unexpected action in response")
                 case None:

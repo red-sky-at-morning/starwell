@@ -12,7 +12,7 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
     if not enable.get_channel_state(message.channel.id, message.channel.guild.id):
         return []
 
-    print(f"default_member: {default_member}")
+    print(f"default member: {default_member.get("names")[0]}")
     member_name = has_replacement(text)
     print(f"text member: {member_name}")
 

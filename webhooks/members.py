@@ -66,12 +66,14 @@ def handle_usermod(id:str, args:list[str], type:str, curr:str):
                 return out
             return [{"type":"message", "message":"Sorry, I don't know how to add that user!","except":True}]
         case "edit":
-            if edit_member(id, args[0], args[1]):
-                out = [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True}]
-                if get_member_by_username(curr) == id:
-                    out.append({"type":"webhook","id":id})
-                return out
-            return [{"type":"message", "message":"Sorry, I don't know how to edit that value!", "except":True}]
+            match edit_member(id, args[0], args[1]):
+                case 1:
+                    out = [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True}]
+                case 2:
+                    out = [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True},{"type":"presence","default":True}]
+                case _:
+                    return [{"type":"message", "message":"Sorry, I don't know how to edit that value!", "except":True}]
+            return out
 
 def add_member(id:str) -> bool:
     members[id] = {"name":0, "names":[id.capitalize()], "username":id}
@@ -79,9 +81,12 @@ def add_member(id:str) -> bool:
         json.dump(members, file)
     return True
 
-def edit_member(id:str, key:str, val:any) -> bool:
-    if key not in ("name", "names", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "presence"):
-        return False
+valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "presence", "emoji")
+def edit_member(id:str, key:str, val:any) -> int:
+    if key not in valid_keys:
+        return 0
+    if id not in members.keys():
+        return 0
     match key:
         case "name":
             if val in members[id]["names"]:
@@ -96,8 +101,11 @@ def edit_member(id:str, key:str, val:any) -> bool:
             else:
                 tags.append(val)
             members[id][key] = tags
+        case "presence":
+            members[id][key] = val
+            return 2
         case _:
             members[id][key] = val
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
-    return True
+    return 1
