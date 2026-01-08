@@ -87,6 +87,7 @@ def edit_member(id:str, key:str, val:any) -> int:
         return 0
     if id not in members.keys():
         return 0
+    out = 1
     match key:
         case "name":
             if val in members[id]["names"]:
@@ -103,9 +104,9 @@ def edit_member(id:str, key:str, val:any) -> int:
             members[id][key] = tags
         case "presence":
             members[id][key] = val
-            return 2
+            out = 2
         case _:
             members[id][key] = val
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
-    return 1
+    return out
