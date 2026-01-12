@@ -9,6 +9,12 @@ with open("meta/params.json", "r") as params:
     self_id = params_json.get("id")
 
 async def get_or_make_webhook(channel:discord.TextChannel) -> discord.Webhook:
+    if not type(channel) is discord.TextChannel:
+        match type(channel):
+            case discord.Thread:
+                channel = channel.parent
+            case _:
+                raise TypeError("get_or_make_webhook(channel): channel was not isntanceOf textChannel or textChannel-like")
     hooks = await channel.webhooks()
     hooks = list([item for item in hooks if item.user.id == self_id])
     if hooks:

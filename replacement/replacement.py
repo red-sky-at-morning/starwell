@@ -21,11 +21,11 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
             if curr_member == None or "no-hooks" in curr_member.get("tags", []):
                 return []
             else:
-                return [{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message.id}]
+                return [{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
         if default_member == None or "no-hooks" in default_member.get("tags", []): 
             return []
         else:
-            return [{"type":"message","message":text, "use-default":True,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message.id}]
+            return [{"type":"message","message":text, "use-default":True,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
     
     member = members.get_member(member_name)
     # print(member)
@@ -35,7 +35,7 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
     if not "keep-repl" in member.get("tags", []):
         text = trim_replacement(text, member.get("replacement"))
     
-    return [{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message.id}]
+    return [{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
 
 def has_replacement(text:str) -> str | None:
     replacements = members.get_all_replacements()

@@ -71,7 +71,7 @@ class Bot(discord.Client):
             case "TESTING":
                 return restricted
     
-    async def handle_response(self, response:list[dict]|None, channel:discord.TextChannel) -> None:
+    async def handle_response(self, response:list[dict]|None, channel:discord.TextChannel|discord.Thread) -> None:
         if response is None:
             return
         for item in response:
@@ -84,6 +84,11 @@ class Bot(discord.Client):
                         self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
                     else:
                         hook = await members.get_or_make_webhook(channel)
+                        if type(channel) == discord.Thread:
+                            thread = channel
+                            channel = channel.parent
+                        else:
+                            thread = discord.utils.MISSING
                         # replying
                         if item.get("reference") is not None:
                             resolve = item.get("reference").resolved
@@ -99,15 +104,22 @@ class Bot(discord.Client):
                         if item.get("files") is not None:
                             for i, file in enumerate(item.get("files")):
                                 item["files"][i] = await file.to_file()
+                        
+                        # join the thread (technically not necessary, but courtesy)
+                        if type(thread) is discord.Thread:
+                            await thread.join()
+                        
                         # send the message
                         if item.get("use-default", False):
-                            self.last_sent_message = await hook.send(item.get("message",""), username=self.default_member.get("username", None), avatar_url=self.default_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
+                            self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=self.default_member.get("username", None), avatar_url=self.default_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
                             continue
-                        self.last_sent_message = await hook.send(item.get("message",""), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
+                        self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
                     print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
+                
                 case "reply":
                     await channel.send(item.get("message","No message provided"), reference=item.get("reply", self.last_sent_message), embed=item.get("embed", None))
                     print(f"Said {item.get('message','No message provided')} {'(with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
+                
                 case "edit":
                     # id: message id, message:content, embed:embeds (append to message embeds) file:files (append to message files)
                     hook:discord.Webhook = await members.get_or_make_webhook(channel)
@@ -119,6 +131,7 @@ class Bot(discord.Client):
                     
                     await message.edit(content=content, embeds=embeds)
                     print(f"Edited message in {channel.name} in {channel.guild.name} from {old_content} to {content}")
+                
                 case "react":
                     message:discord.Message = item.get("message", self.last_sent_message)
                     if type(item.get("react")) == discord.PartialEmoji:
@@ -127,15 +140,20 @@ class Bot(discord.Client):
                         for char in item.get("react"):
                             await message.add_reaction(char)
                     print(f"Reacted to {message.content} (by {message.author}) in {message.channel} in {message.channel.guild} with {item.get('react')}")
+                
                 case "delete":
                     try:
-                        message = await channel.fetch_message(item.get("message"))
+                        message = item.get("message")
+                        if type(message) is int:
+                            message = await channel.fetch_message(item.get("message"))
                         await message.delete()
                     except discord.errors.PrivilegedIntentsRequired:
                         await channel.send("We do not have permission to delete messages")
+                
                 case "wait":
                     print(f"Sleeping for {item.get('time', 0)} seconds...")
                     await asyncio.sleep(item.get("time"))
+                
                 case "webhook":
                     if item.get("id", "_") != None:
                         self.curr_member = members.get_member(item.get("id", "_"))
@@ -144,10 +162,12 @@ class Bot(discord.Client):
                     if item.get("default", False):
                         self.default_member = self.curr_member
                         response.append({"type":"presence", "default":True})
+                
                 case "error":
                     error = item.get("error")
                     print(f"Raising error {error}")
                     raise error
+                
                 case "call":
                     if item.get("wait_type", None) is not None:
                         msg = await self.wait_for(item.get("wait_type"), check=item.get("check"))
@@ -159,6 +179,7 @@ class Bot(discord.Client):
                         return
                     if type(resp) == dict:
                         response.append(resp)
+                
                 case "presence":
                     if item.get("default", False):
                         presence = f"{self.curr_member.get("presence", "watching the stars")}"
@@ -171,6 +192,7 @@ class Bot(discord.Client):
                     
                     presence = f"{emoji} | {presence}"
                     await self.change_presence(activity=discord.CustomActivity(name=presence))
+                
                 case "special":
                     match item.get("action"):
                         case "toggle_ap":
@@ -179,8 +201,10 @@ class Bot(discord.Client):
                             response.append({"type":"presence", "default":True})
                         case _:
                             raise TypeError("Unexpected action in response")
+                
                 case None:
                     raise TypeError("No type provided for response")
+                
                 case _:
                     raise TypeError("Unexpected type for response")
     
