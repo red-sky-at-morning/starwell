@@ -26,7 +26,7 @@ def member_info(id:str) -> list[dict]:
 
     member = members.get(id, None)
     if not member:
-        return[{"type":"message","message":"That member does not exist (yet?)! Sorry!"}]
+        return[{"type":"message","message":"That member does not exist (yet?)! Sorry!", "except": True}]
 
     names_l = member.get("names").copy()
     del names_l[member.get("name", 0)]
