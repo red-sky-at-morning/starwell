@@ -33,7 +33,7 @@ class Bot(discord.Client):
             self.author = await self.fetch_user(params_json.get("dev_ids")[0])
         if self.mode == "TESTING":
             self.ignore_errors = True
-        await self.change_presence(activity=discord.CustomActivity(name="🔴 | watching the stars"))
+        await self.change_presence(activity=discord.CustomActivity(name=f"🔴{self.curr_member.get("emoji")} | {self.curr_member.get("presence")}"))
         print(f"{self.user} is now running!")
 
     async def send_dm(self, user:discord.User, content:str) -> None:

@@ -20,19 +20,48 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
     m_list.append(content)
     response:list = []
     response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"))
-    response += public_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
+    response += public_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"))
     response += member_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"))
     response += reply_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
     return response
 
-def public_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool) -> list[dict]:
+def public_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict) -> list[dict]:
     response:list = []
     if command[0][0] != cmd_prefix:
         return response
     # public commands
     match command[0][1:]:
+        case "help":
+            async def create_help(self, id, message) -> bool:
+                embed = discord.Embed(title="STARWELL commands")
+                embed.add_field(name="&help", value="*Shows this message. Hi!*")
+                embed.add_field(name="&member", value="*Shows information about the current member.*\nSubcommands:\n- &member list: *Lists all members*\n- &member <id>: *Shows information about a specific member*")
+                embed.add_field(name="&chinfo", value="*Shows whether STARWELL will proxy in the current channel, and the reason, if any.")
+                footer_text = "Commands prefixed with a * can only be used by members. Commands prefixed with a ↑ only work when replying to a message. You are%1 a member."
+                if id not in trusted_ids:
+                    embed.set_footer(text=footer_text.replace("%1", " not"))
+                else:
+                    embed.set_footer(text=footer_text.replace("%1", ""))
+                    # Member-only commands
+                    embed.add_field(name="*&ap", value="*Toggles Autoproxy. Reacts with the new state of Autoproxy.*")
+                    embed.add_field(name="*&setfront", value="*Sets the default user to the last member speaking.*\nSubcommands:\n- &setfront <id>: *Sets the default member to a specific user.*")
+                    embed.add_field(name="*&useradd <id>", value="*Adds a new user. <id> is a required argument.*")
+                    embed.add_field(name="*&usermod <id> <key> <val>", value="*Changes a value of a user. <id>, <key>, and <val> are required.*\nAllowed keys:\n- name\n- names\n- username\n- pronouns\n- avatar\n- color\n- desc\n- replacement\n- tags\n- presence\n- emoji*")
+                    embed.add_field(name="*&chmod <enable|disable>", value="*Enables or disables proxying in a channel.*\nSubcommands:\n- &chmod <enable|disable> <reason>: *Enables or disables proxying in a channel, and sets a reason.*")
+                    embed.add_field(name="*&svmod <enable|disable>", value="*Enables or disables proxying in a server.*\nSubcommands:\n- &svmod <enable|disable> <reason>: *Enables or disables proxying in a server, and sets a reason.*")
+                    # Member reply-only commands
+                    embed.add_field(name="*↑&rp", value="*Deletes a message sent by a webhook, and sends it as the current user.*\nSubcommands:\n- &rp <id>: *Deletes a message sent by a webhook, and sends it as a specific user.*")
+                    embed.add_field(name="*↑&edit <text>", value="*Edits a message sent by a webhook to say <text>.*")
+                    embed.add_field(name="*↑&del", value="*Deletes a message sent by a webhook.*")
+                return {"type":"message","message":"","embed":[embed],"except":True}
+            
+            response += [{"type":"call", "call":create_help, "message":message}]
+            pass
         case "member":
-            response += members.member_info(command[1].lower())
+            if len(command) > 2:
+                response += members.member_info(command[1].lower())
+            else:
+                response += members.member_info(members.get_member_by_username(curr.get("username", "error/test")))
         case "chinfo":
             response += enable.get_formatted_channel(message.channel, message.channel.guild)
         # case "test1":
