@@ -6,7 +6,8 @@ from replacement import enable
 
 def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict, default_member:dict) -> list[dict]:
     if len(text) < 1:
-        return []
+        if len(message.attachments) + len(message.embeds) <= 0:
+            return []
     elif text[0] == "&":
         return []
     elif message.type not in (discord.MessageType.default, discord.MessageType.reply):
