@@ -36,7 +36,7 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
                 embed = discord.Embed(title="STARWELL commands")
                 embed.add_field(name="&help", value="*Shows this message. Hi!*")
                 embed.add_field(name="&member", value="*Shows information about the current member.*\nSubcommands:\n- &member list: *Lists all members*\n- &member <id>: *Shows information about a specific member*")
-                embed.add_field(name="&chinfo", value="*Shows whether STARWELL will proxy in the current channel, and the reason, if any.")
+                embed.add_field(name="&chinfo", value="*Shows whether STARWELL will proxy in the current channel, and the reason, if any.*")
                 footer_text = "Commands prefixed with a * can only be used by members. Commands prefixed with a ↑ only work when replying to a message. You are%1 a member."
                 if id not in trusted_ids:
                     embed.set_footer(text=footer_text.replace("%1", " not"))
@@ -64,8 +64,6 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
                 response += members.member_info(members.get_member_by_username(curr.get("username", "error/test")))
         case "chinfo":
             response += enable.get_formatted_channel(message.channel, message.channel.guild)
-        # case "test1":
-        #     response += [{"type":"react","message":message,"react":discord.PartialEmoji.from_str("<:fuwaaa:1458680563375411375>")}]
 
     return response
 

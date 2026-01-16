@@ -5,11 +5,13 @@ from webhooks import members
 from replacement import enable
 
 def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict, default_member:dict) -> list[dict]:
-    if len(text)>= 1 and text[0] == "&":
+    if len(text) < 1:
         return []
-    if message.type not in (discord.MessageType.default, discord.MessageType.reply):
+    elif text[0] == "&":
         return []
-    if not enable.get_channel_state(message.channel.id, message.channel.guild.id):
+    elif message.type not in (discord.MessageType.default, discord.MessageType.reply):
+        return []
+    elif not enable.get_channel_state(message.channel.id, message.channel.guild.id):
         return []
 
     print(f"default member: {default_member.get("names")[0]}")

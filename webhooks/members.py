@@ -87,7 +87,7 @@ def add_member(id:str) -> bool:
         json.dump(members, file)
     return True
 
-valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "presence", "emoji")
+valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "presence", "status", "emoji")
 def edit_member(id:str, key:str, val:any) -> int:
     if key not in valid_keys:
         return 0
@@ -108,8 +108,8 @@ def edit_member(id:str, key:str, val:any) -> int:
             else:
                 tags.append(val)
             members[id][key] = tags
-        case "presence":
-            members[id][key] = val
+        case "presence" | "status":
+            members[id]["presence"] = val
             out = 2
         case _:
             members[id][key] = val

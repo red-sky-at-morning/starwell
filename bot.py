@@ -80,6 +80,8 @@ class Bot(discord.Client):
             match item.get("type", None):
                 case "message":
                     # send messages as bot
+                    if len(item.get("message")) <= 0:
+                        continue
                     if self.curr_member is None or item.get("except", False):
                         self.last_sent_message = await channel.send(item.get("message","No message provided"), embeds=item.get("embed", []), reference=item.get("reference"))
                     else:
@@ -93,7 +95,8 @@ class Bot(discord.Client):
                         if item.get("reference") is not None:
                             resolve = item.get("reference").resolved
                             if resolve != None:
-                                embed = discord.Embed(description=f"[Reply to]({resolve.jump_url}): {resolve.content}")
+                                attachment_len = len(resolve.attachments) + len(resolve.embeds)
+                                embed = discord.Embed(description=f"[Reply to]({resolve.jump_url}): {resolve.content if len(resolve.content) >= 1 else "[no content]"} {"(includes attatchment)" if attachment_len > 0 else ""}")
                                 print(resolve.author.display_avatar.url)
                                 embed.set_author(name=resolve.author.name, icon_url=resolve.author.display_avatar.url)
                                 if item.get("embed") != None:
