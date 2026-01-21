@@ -1,3 +1,4 @@
+import builtins
 import json
 import discord
 # from discord.ext import commands
@@ -173,17 +174,25 @@ class Bot(discord.Client):
                     raise error
                 
                 case "call":
-                    if item.get("wait_type", None) is not None:
-                        msg = await self.wait_for(item.get("wait_type"), check=item.get("check"))
+                    wait_type = item.get("wait_type", None)
+                    if wait_type is not None:
+                        msg = await self.wait_for(wait_type, check=item.get("check", lambda x: True))
                     else:
                         msg = item.get("message")
+
+                    print(msg)
                     func = item.get("call", lambda x:None)
                     resp = await func(self, msg.author.id, msg)
                     if (item.get("kill") and not resp):
                         return
-                    if type(resp) == dict:
-                        response.append(resp)
-                
+                    match type(resp):
+                        case builtins.dict:
+                            response.append(resp)
+                        case builtins.list:
+                            response += resp
+                        case _:
+                            continue
+
                 case "presence":
                     if item.get("default", False):
                         presence = f"{self.curr_member.get("presence", "watching the stars")}"

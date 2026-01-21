@@ -24,7 +24,7 @@ async def get_or_make_webhook(channel:discord.TextChannel) -> discord.Webhook:
 
 def member_info(id:str) -> list[dict]:
     if id == "list":
-        member_list = [f"{key}: {members[key].get("names", "")[members[key].get("name")]} ({members[key].get("pronouns", "none set")})" if key != "_" else "" for key in members.keys()]
+        member_list = [f"`{key}`: {members[key].get("names", "")[members[key].get("name")]} ({members[key].get("pronouns", "none set")}){f'\n- *{members[key].get("desc", "")}*' if members[key].get("desc", None) is not None else ""}" if key != "_" else "" for key in members.keys()]
         member_list.sort()
         member_list = "\n".join(member_list)
         embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members of the Daybreak System",description=member_list)
@@ -37,7 +37,8 @@ def member_info(id:str) -> list[dict]:
     names_l = member.get("names").copy()
     del names_l[member.get("name", 0)]
     embed_desc = f"{member.get("names")[member.get("name", 0)]}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
-    embed_desc += f"\n{member.get("desc")}"
+    embed_desc += f"\n*{member.get("desc", "")}*"
+    embed_desc += f"\n{member.get("about", "")}"
     
     embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
@@ -87,7 +88,7 @@ def add_member(id:str) -> bool:
         json.dump(members, file)
     return True
 
-valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "replacement", "tags", "presence", "status", "emoji")
+valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji")
 def edit_member(id:str, key:str, val:any) -> int:
     if key not in valid_keys:
         return 0
