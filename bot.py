@@ -99,7 +99,6 @@ class Bot(discord.Client):
                             if resolve != None:
                                 attachment_len = len(resolve.attachments) + len(resolve.embeds)
                                 embed = discord.Embed(description=f"[Reply to]({resolve.jump_url}): {resolve.content if len(resolve.content) >= 1 else "[no content]"} {"(includes attatchment)" if attachment_len > 0 else ""}")
-                                print(resolve.author.display_avatar.url)
                                 embed.set_author(name=resolve.author.name, icon_url=resolve.author.display_avatar.url)
                                 if item.get("embed") != None:
                                     item["embed"].insert(0, embed)
@@ -180,7 +179,6 @@ class Bot(discord.Client):
                     else:
                         msg = item.get("message")
 
-                    print(msg)
                     func = item.get("call", lambda x:None)
                     resp = await func(self, msg.author.id, msg)
                     if (item.get("kill") and not resp):

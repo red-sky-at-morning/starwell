@@ -22,13 +22,21 @@ async def get_or_make_webhook(channel:discord.TextChannel) -> discord.Webhook:
     hook = await channel.create_webhook(name="STARWELL member webhook",reason="initial creation. if there are more than one of these, something is wrong.")
     return hook
 
+def system_info() -> list[dict]:
+    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"The Daybreak System",description=members["_"].get("about"))
+    
+    member_list = [f"`{key}`: {members[key].get("names", "")[members[key].get("name")]} ({members[key].get("pronouns", "none set")}){f'\n- *{members[key].get("desc", "")}*' if members[key].get("desc", None) is not None else ""}" if key != "_" else "" for key in members.keys()]
+    member_list.sort()
+    member_list = "\n".join(member_list)
+    embed.add_field(name="Members", value=member_list)
+    
+    embed.set_footer(text="To see more information about a member, use &member <id>")
+
+    return [{"type":"message","message":"","embed":[embed],"except":True}]
+
 def member_info(id:str) -> list[dict]:
     if id == "list":
-        member_list = [f"`{key}`: {members[key].get("names", "")[members[key].get("name")]} ({members[key].get("pronouns", "none set")}){f'\n- *{members[key].get("desc", "")}*' if members[key].get("desc", None) is not None else ""}" if key != "_" else "" for key in members.keys()]
-        member_list.sort()
-        member_list = "\n".join(member_list)
-        embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members of the Daybreak System",description=member_list)
-        return [{"type":"message","message":"","embed":[embed],"except":True}]
+        return system_info()
 
     member = members.get(id, None)
     if not member:
