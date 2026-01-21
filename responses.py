@@ -20,16 +20,16 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
     m_list.append(content)
     response:list = []
     response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"))
-    response += public_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("mentioned"))
+    response += public_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"), kwargs.get("mentioned"))
     response += member_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"))
     response += reply_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
     return response
 
-def public_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict, mentioned: bool) -> list[dict]:
+def public_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict, default:dict, mentioned: bool) -> list[dict]:
     response:list = []
 
     if mentioned and (f"<@{self_id}>" in command[0]):
-        response += [{"type":"message","message":"Hi! It sounds like you have questions! What can we help with? (Answer commands, plurality, daybreak, front)","except":True}]
+        response += [{"type":"message","message":"Hi! It sounds like you have questions! What can we help with? (Answer bot, commands, daybreak, front, or plurality)","except":True}]
         response += [{"type":"call","call":info_tree,"wait_type":"message","check":lambda x: x.author.id == message.author.id}]
     
     if command[0][0] != cmd_prefix:
@@ -37,13 +37,13 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
     # public commands
     match command[0][1:]:
         case "help":         
-            response += [{"type":"call", "call":create_help, "message":message}]
-            pass
+            response += [{"type":"message","message":"Hi! It sounds like you have questions! What can we help with? (Answer bot, commands, daybreak, front, or plurality)","except":True}]
+            response += [{"type":"call","call":info_tree,"wait_type":"message","check":lambda x: x.author.id == message.author.id}]
         case "member":
             if len(command) > 2:
                 response += members.member_info(command[1].lower())
             else:
-                response += members.member_info(members.get_member_by_username(curr.get("username", "error/test")))
+                response += members.member_info(members.get_front(curr, default, ap))
         case "chinfo":
             response += enable.get_formatted_channel(message.channel, message.channel.guild)
 
@@ -116,7 +116,9 @@ async def info_tree(self, id, message) -> dict:
         case "daybreak":
             return members.member_info("list")
         case "front":
-            return members.member_info(members.get_member_by_username(self.curr_member.get("username", "error/test")))
+            return members.member_info(members.get_front(self.curr_member, self.default_member, self.ap))
+        case "bot":
+            return [{"type":"message","except":True,"message":"STARWELL is a custom-made and hosted bot built using discord.py and hosted on a server running headless linux mint. It is based on [EclipseBot V2's code](https://github.com/red-sky-at-morning/discord_bot), with custom modules to support webhooks."},{"type":"message","except":True,"message":"STARWELL's code is available publicly [on github](https://github.com/red-sky-at-morning/starwell). If you're looking for information about how to use the bot, try the `commands` option."}]
         case _:
             return {"type":"message","message":"Sorry, I don't know how to answer that question!", "except":True}
 

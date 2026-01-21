@@ -71,7 +71,7 @@ class Bot(discord.Client):
                 return restricted
             case "TESTING":
                 return restricted
-    
+
     async def handle_response(self, response:list[dict]|None, channel:discord.TextChannel|discord.Thread) -> None:
         if response is None:
             return

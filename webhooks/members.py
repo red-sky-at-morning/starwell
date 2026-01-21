@@ -68,6 +68,12 @@ def get_member_by_username(username:str) -> str:
     filtered = list(filter(lambda x: x.get("username") == username, list(members.copy().values())))
     return [key for key, value in members.items() if value == filtered[0]][0]
 
+def get_front(curr:dict, default:dict, ap:bool) -> str:
+    if ap:
+        return get_member_by_username(curr.get("username", "nullrefexception"))
+    else:
+        return get_member_by_username(default.get("username", "nullrefexception"))
+
 def get_all_replacements() -> dict:
     return {name:item.get("replacement", None) for name,item in zip(members.keys(), members.values())}
 
