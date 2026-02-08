@@ -112,7 +112,7 @@ async def info_tree(self, id, message) -> dict:
         case "commands":
             return {"type":"call","call":create_help,"message":message}
         case "plurality":
-            return [{"type":"message","except":True,"message":"Plurality is when multiple people or entities, usually called headmates, share the same body. A group of headmates is often reffered to as a system or collective. Headmates usually have differing personalities, names, pronouns, and preferences."},{"type":"message","except":True,"message":"For more information on systems in general, [morethanone.info](https://morethanone.info/), [healthymultiplicity](https://healthymultiplicity.com/#i), or [pluralpedia](https://pluralpedia.org/w/Main_Page) are good resources. For more information about us, try the `daybreak` option."}]
+            return [{"type":"message","except":True,"message":"Plurality is when multiple people or entities, usually called headmates, share the same body. A group of headmates is often reffered to as a system or collective. Headmates usually have differing personalities, names, pronouns, and preferences."},{"type":"message","except":True,"message":"For more information on systems in general, [a system's guide to plurality](https://sys.guide), [more than one](https://morethanone.info/), [healthy multiplicity](https://healthymultiplicity.com/#i), or [pluralpedia](https://pluralpedia.org/w/Main_Page) are good resources. For more information about us, try the `daybreak` option."}]
         case "daybreak":
             return members.member_info("list")
         case "front":
