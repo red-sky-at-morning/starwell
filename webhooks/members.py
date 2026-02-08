@@ -34,7 +34,7 @@ def system_info() -> list[dict]:
 
     return [{"type":"message","message":"","embed":[embed],"except":True}]
 
-def member_info(id:str) -> list[dict]:
+def member_info(id:str, server:int) -> list[dict]:
     if id == "list":
         return system_info()
 
@@ -48,7 +48,12 @@ def member_info(id:str) -> list[dict]:
     embed_desc += f"\n*{member.get("desc", "")}*"
     embed_desc += f"\n{member.get("about", "")}"
     
-    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"@{member.get("username")}",description=embed_desc)
+    embed_title = f"@{member.get("username")}"
+    nick = get_nickname_by_id(id, server)
+    if nick is not None:
+        embed_title = f"@{nick} ({embed_title})"
+
+    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"{embed_title}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
 
     if names_l:
@@ -59,7 +64,15 @@ def member_info(id:str) -> list[dict]:
         embed.add_field(name="Text", value=member.get("replacement"), inline=False)
     if member.get("tags"):
         embed.set_footer(text=str(member.get("tags")).strip("[]").replace("'", ""))
+
     return [{"type":"message","message":"","embed":[embed], "except":True}]
+
+def get_nickname_by_id(id:str, server:int):
+    member = members.get(id)
+    return member.get("nick", {}).get(server.__str__(), None)
+
+def get_nickname(member:dict, server:id):
+    return member.get("nick", {}).get(server.__str__(), None)
 
 def get_member(id:str) -> dict:
     return members.get(id, members.get("_"))
@@ -77,7 +90,7 @@ def get_front(curr:dict, default:dict, ap:bool) -> str:
 def get_all_replacements() -> dict:
     return {name:item.get("replacement", None) for name,item in zip(members.keys(), members.values())}
 
-def handle_usermod(id:str, args:list[str], type:str, curr:str):
+def handle_usermod(id:str, args:list[str], type:str, server:int):
     if type not in ("add", "edit"):
         return [{"type":"message", "message":"Sorry, I don't know how to perform that action!","except":True}]
     match type:
@@ -87,7 +100,7 @@ def handle_usermod(id:str, args:list[str], type:str, curr:str):
                 return out
             return [{"type":"message", "message":"Sorry, I don't know how to add that user!","except":True}]
         case "edit":
-            match edit_member(id, args[0], args[1]):
+            match edit_member(id, args[0], args[1], server=server):
                 case 1:
                     out = [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True}]
                 case 2:
@@ -102,8 +115,8 @@ def add_member(id:str) -> bool:
         json.dump(members, file)
     return True
 
-valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji")
-def edit_member(id:str, key:str, val:any) -> int:
+valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji", "nick")
+def edit_member(id:str, key:str, val:any, **kwargs) -> int:
     if key not in valid_keys:
         return 0
     if id not in members.keys():
@@ -126,6 +139,16 @@ def edit_member(id:str, key:str, val:any) -> int:
         case "presence" | "status":
             members[id]["presence"] = val
             out = 2
+        case "nick":
+            server_id = kwargs.get("server")
+            if server_id is None:
+                return 0
+            if members.get(id).get("nick", None) is None:
+                members[id]["nick"] = {}
+            if not val:
+                del members[id]["nick"][server_id.__str__()]
+            else:
+                members[id]["nick"][server_id.__str__()] = val
         case _:
             members[id][key] = val
     with open("webhooks/meta/members.json", "w") as file:

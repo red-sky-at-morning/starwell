@@ -35,12 +35,18 @@ async def message(self: discord.Client, item:list[dict]|None, channel:discord.Te
         # join the thread (technically not necessary, but courtesy)
         if type(thread) is discord.Thread:
             await thread.join()
-        
+
         # send the message
         if item.get("use-default", False):
-            self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=self.default_member.get("username", None), avatar_url=self.default_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
+            name = members.get_nickname(self.default_member, channel.guild.id)
+            if name is None:
+                name = self.default_member.get("username", None)
+            self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=name, avatar_url=self.default_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
             return
-        self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=self.curr_member.get("username", None), avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
+        name = members.get_nickname(self.curr_member, channel.guild.id)
+        if name is None:
+            name = self.curr_member.get("username", None)
+        self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=name, avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
     print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
 
 async def edit(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):

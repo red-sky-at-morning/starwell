@@ -41,9 +41,9 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
             response += [{"type":"call","call":info_tree,"wait_type":"message","check":lambda x: x.author.id == message.author.id}]
         case "member":
             if len(command) > 2:
-                response += members.member_info(command[1].lower())
+                response += members.member_info(command[1].lower(), message.guild.id)
             else:
-                response += members.member_info(members.get_front(curr, default, ap))
+                response += members.member_info(members.get_front(curr, default, ap), message.guild.id)
         case "chinfo":
             response += enable.get_formatted_channel(message.channel, message.channel.guild)
 
@@ -61,10 +61,15 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
                 response += [{"type": "webhook", "id":None, "default":True}]
             else:
                 response += [{"type":"webhook", "id":command[1], "default":True}]
+        case "nick":
+            if members.get_member(command[1]) == members.get_member("_"):
+                response += members.handle_usermod(members.get_member_by_username(curr.get("username")), ["nick", command[-1].removeprefix(f"{command[0]}").strip()], "edit", message.guild.id)
+            else:
+                response += members.handle_usermod(command[1], ["nick", command[-1].removeprefix(f"{command[0]}").strip()], "edit", message.guild.id)
         case "useradd":
-            response += members.handle_usermod(command[1], [], "add", curr.get("name", "_"))
+            response += members.handle_usermod(command[1], [], "add", message.guild.id)
         case "usermod":
-            response += members.handle_usermod(command[1], [command[2], command[-1].split(command[2])[-1].strip()], "edit", curr.get("username", "_"))
+            response += members.handle_usermod(command[1], [command[2], command[-1].split(command[2])[-1].strip()], "edit", message.guild.id)
         case "chmod" | "svmod":
             response += enable.handle(command[0][1:], command, message.channel, message.channel.guild)
     return response
