@@ -51,7 +51,7 @@ def member_info(id:str, server:int) -> list[dict]:
     embed_title = f"@{member.get("username")}"
     nick = get_nickname_by_id(id, server)
     if nick is not None:
-        embed_title = f"@{nick} ({embed_title})"
+        embed_title = f"{nick} ({embed_title})"
 
     embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"{embed_title}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
@@ -115,7 +115,7 @@ def add_member(id:str) -> bool:
         json.dump(members, file)
     return True
 
-valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji", "nick")
+valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji", "nick", "id")
 def edit_member(id:str, key:str, val:any, **kwargs) -> int:
     if key not in valid_keys:
         return 0
@@ -149,6 +149,10 @@ def edit_member(id:str, key:str, val:any, **kwargs) -> int:
                 del members[id]["nick"][server_id.__str__()]
             else:
                 members[id]["nick"][server_id.__str__()] = val
+        case "id":
+            member_data = members[id]
+            del members[id]
+            members[val] = member_data
         case _:
             members[id][key] = val
     with open("webhooks/meta/members.json", "w") as file:

@@ -65,7 +65,7 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
             if members.get_member(command[1]) == members.get_member("_"):
                 response += members.handle_usermod(members.get_member_by_username(curr.get("username")), ["nick", command[-1].removeprefix(f"{command[0]}").strip()], "edit", message.guild.id)
             else:
-                response += members.handle_usermod(command[1], ["nick", command[-1].removeprefix(f"{command[0]}").strip()], "edit", message.guild.id)
+                response += members.handle_usermod(command[1], ["nick", command[-1].removeprefix(f"{command[0]} {command[1]}").strip()], "edit", message.guild.id)
         case "useradd":
             response += members.handle_usermod(command[1], [], "add", message.guild.id)
         case "usermod":
