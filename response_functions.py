@@ -1,7 +1,9 @@
 import discord
 import asyncio
 from webhooks import members
+# import benchmark
 
+# @benchmark.timer
 async def message(self: discord.Client, item:list[dict]|None, channel:discord.TextChannel):
     # send messages as bot
     # if len(item.get("message")) <= 0:
@@ -49,6 +51,7 @@ async def message(self: discord.Client, item:list[dict]|None, channel:discord.Te
         self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=name, avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
     print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
 
+# @benchmark.timer
 async def edit(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
         # id: message id, message:content, embed:embeds (append to message embeds) file:files (append to message files)
     hook:discord.Webhook = await members.get_or_make_webhook(channel)
@@ -61,6 +64,7 @@ async def edit(self:discord.Client, item:list[dict]|None, channel:discord.TextCh
     await message.edit(content=content, embeds=embeds)
     print(f"Edited message in {channel.name} in {channel.guild.name} from {old_content} to {content}")
 
+# @benchmark.timer
 async def react(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
     message:discord.Message = item.get("message", self.last_sent_message)
     if type(item.get("react")) == discord.PartialEmoji:
@@ -70,6 +74,7 @@ async def react(self:discord.Client, item:list[dict]|None, channel:discord.TextC
             await message.add_reaction(char)
     print(f"Reacted to {message.content} (by {message.author}) in {message.channel} in {message.channel.guild} with {item.get('react')}")
 
+# @benchmark.timer
 async def delete(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
     try:
         message = item.get("message")
@@ -79,19 +84,24 @@ async def delete(self:discord.Client, item:list[dict]|None, channel:discord.Text
     except discord.errors.PrivilegedIntentsRequired:
         await channel.send("We do not have permission to delete messages")
 
+# @benchmark.timer
 async def wait(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
     print(f"Sleeping for {item.get('time', 0)} seconds...")
     await asyncio.sleep(item.get("time"))
 
+# @benchmark.timer
 async def webhook(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
-    if item.get("id", "_") != None:
-        self.curr_member = members.get_member(item.get("id", "_"))
+    if item.get("id", None) != None:
+        member = members.get_member(item.get("id", "_"))
+        if member is not None:
+            self.curr_member = member
     if self.ap:
         return({"type":"presence", "default":True})
     if item.get("default", False):
         self.default_member = self.curr_member
         return({"type":"presence", "default":True})
 
+# @benchmark.timer
 async def call(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
     wait_type = item.get("wait_type", None)
     if wait_type is not None:
@@ -102,6 +112,7 @@ async def call(self:discord.Client, item:list[dict]|None, channel:discord.TextCh
     func = item.get("call", lambda x:None)
     return await func(self, msg.author.id, msg)
 
+# @benchmark.timer
 async def presence(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
     if item.get("default", False):
         presence = f"{self.curr_member.get("presence", "watching the stars")}"

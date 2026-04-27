@@ -22,10 +22,50 @@ async def get_or_make_webhook(channel:discord.TextChannel) -> discord.Webhook:
     hook = await channel.create_webhook(name="STARWELL member webhook",reason="initial creation. if there are more than one of these, something is wrong.")
     return hook
 
-def system_info() -> list[dict]:
+def handle(command:list[str], curr:dict, default:dict, ap:bool, message:discord.Message) -> list[dict]:
+    # member (list <all|tags|none>)(show <all|tags|none>)(id|none)
+    
+    # show front if just the command is sent
+    if len(command) <= 2:
+        return member_info(get_front(curr, default, ap), message.guild.id)
+    
+    match command[1].lower():
+        case "list":
+            if len(command) <= 3:
+                return list_all()
+            if command[2] == "all":
+                return list_all()
+            else:
+                return list_by_tag(command[2].lower())
+        case "show":
+            if len(command) <= 3:
+                return member_info(get_front(curr, default, ap), message.guild.id)
+            if command[2] == "all":
+                return show_all()
+            else:
+                if command[2].lower() in members.keys():
+                    return member_info(command[2].lower(), message.guild.id)
+                else:
+                    return show_by_tag(command[2].lower())
+        case _:
+            return member_info(command[1].lower(), message.guild.id)
+
+# funcs for listing
+
+def filter_members(func) -> dict:
+    out = {}
+    for key, member in members.items():
+        if func(key, member):
+            out[key] = member
+    return out
+
+def list_all() -> list[dict]:
     embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"The Daybreak System",description=members["_"].get("about"))
     
-    member_list = [f"`{key}`: {members[key].get("names", "")[members[key].get("name")]} ({members[key].get("pronouns", "none set")}){f'\n- *{members[key].get("desc", "")}*' if members[key].get("desc", None) is not None else ""}" if key != "_" else "" for key in members.keys()]
+    member_list = []
+    for key, member in filter_members(lambda x, y: not "no-list" in y.get("tags", [])).items():
+        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc", "")}*' if member.get("desc", None) is not None else ""}")
+    
     member_list.sort()
     member_list = "\n".join(member_list)
     embed.add_field(name="Members", value=member_list)
@@ -34,10 +74,40 @@ def system_info() -> list[dict]:
 
     return [{"type":"message","message":"","embed":[embed],"except":True}]
 
-def member_info(id:str, server:int) -> list[dict]:
-    if id == "list":
-        return system_info()
+def list_by_tag(tag:str):
+    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members with tag `{tag}`",description=members["_"].get("about"))
+    
+    member_list = []
+    for key, member in filter_members(lambda x, y: (not "no-list" in y.get("tags", [])) and (tag in y.get("tags", []))).items():
+        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc", "")}*' if member.get("desc", None) is not None else ""}")
 
+    member_list.sort()
+    member_list = "\n".join(member_list)
+    if member_list != '':
+        embed.add_field(name="Members", value=member_list)
+    else:
+        embed.add_field(name="Members", value=f"No members with tag `{tag}`. Sorry!")
+
+    embed.set_footer(text="To see more information about a member, use &member <id>")
+
+    return [{"type":"message","message":"","embed":[embed],"except":True}]
+
+# funcs for showing
+
+def show_all(server:int) -> list[dict]:
+    response = []
+    for key, in sorted(filter_members(lambda x, y: not "no-list" in y.get("tags", [])).keys()):
+        response += member_info(key, server)
+    return response
+
+def show_by_tags(server:int, tags:list[str]) -> list[dict]:
+    for key, in sorted(filter_members(lambda x, y: (not "no-list" in y.get("tags", [])) and (tag in y.get("tags", []))).keys()):
+        response += member_info(key, server)
+    return response
+
+# helpers
+
+def member_info(id:str, server:int) -> list[dict]:
     member = members.get(id, None)
     if not member:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!", "except": True}]
@@ -45,7 +115,9 @@ def member_info(id:str, server:int) -> list[dict]:
     names_l = member.get("names").copy()
     del names_l[member.get("name", 0)]
     embed_desc = f"{member.get("names")[member.get("name", 0)]}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
-    embed_desc += f"\n*{member.get("desc", "")}*"
+    member_desc = member.get("desc", None)
+    if member_desc is not None:
+        embed_desc += f" *{member_desc}*"
     embed_desc += f"\n{member.get("about", "")}"
     
     embed_title = f"@{member.get("username")}"
@@ -74,8 +146,8 @@ def get_nickname_by_id(id:str, server:int):
 def get_nickname(member:dict, server:id):
     return member.get("nick", {}).get(server.__str__(), None)
 
-def get_member(id:str) -> dict:
-    return members.get(id, members.get("_"))
+def get_member(id:str) -> dict | None:
+    return members.get(id, None)
 
 def get_member_by_username(username:str) -> str:
     filtered = list(filter(lambda x: x.get("username") == username, list(members.copy().values())))
@@ -89,6 +161,8 @@ def get_front(curr:dict, default:dict, ap:bool) -> str:
 
 def get_all_replacements() -> dict:
     return {name:item.get("replacement", None) for name,item in zip(members.keys(), members.values())}
+
+# usermods
 
 def handle_usermod(id:str, args:list[str], type:str, server:int):
     if type not in ("add", "edit"):

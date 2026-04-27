@@ -6,12 +6,15 @@ from webhooks import members
 from replacement import replacement
 from replacement import enable
 
+# import benchmark
+
 with open("meta/params.json", "r") as params:
     params_json = json.load(params)
     cmd_prefix:str = params_json.get("cmd_prefix")
     trusted_ids = params_json.get("dev_ids")
     self_id = params_json.get("id")
 
+# @benchmark.timer
 def handle_message(message: discord.Message, content:str, channel_id, user_id:int, server:int, **kwargs) -> list[dict]:
     if not content:
         return message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"))
@@ -28,9 +31,9 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
 def public_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict, default:dict, mentioned: bool) -> list[dict]:
     response:list = []
 
-    if mentioned and (f"<@{self_id}>" in command[0]):
-        response += [{"type":"message","message":"Hi! It sounds like you have questions! What can we help with? (Answer bot, commands, daybreak, front, or plurality)","except":True}]
-        response += [{"type":"call","call":info_tree,"wait_type":"message","check":lambda x: x.author.id == message.author.id}]
+    # if mentioned and (f"<@{self_id}>" in command[0]):
+    #     response += [{"type":"message","message":"Hi! It sounds like you have questions! What can we help with? (Answer bot, commands, daybreak, front, or plurality)","except":True}]
+    #     response += [{"type":"call","call":info_tree,"wait_type":"message","check":lambda x: x.author.id == message.author.id}]
     
     if command[0][0] != cmd_prefix:
         return response
@@ -40,10 +43,7 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
             response += [{"type":"message","message":"Hi! It sounds like you have questions! What can we help with? (Answer bot, commands, daybreak, front, or plurality)","except":True}]
             response += [{"type":"call","call":info_tree,"wait_type":"message","check":lambda x: x.author.id == message.author.id}]
         case "member":
-            if len(command) > 2:
-                response += members.member_info(command[1].lower(), message.guild.id)
-            else:
-                response += members.member_info(members.get_front(curr, default, ap), message.guild.id)
+            response += members.handle(command, curr, default, ap, message)
         case "chinfo":
             response += enable.get_formatted_channel(message.channel, message.channel.guild)
 
@@ -52,6 +52,8 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
 def member_commands(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict):
     response:list = []
     if user_id not in trusted_ids:
+        return response
+    if command[0][0] != cmd_prefix:
         return response
     match command[0][1:]:
         case "ap":

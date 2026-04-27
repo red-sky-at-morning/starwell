@@ -5,6 +5,7 @@ import discord
 import asyncio
 import responses
 import response_functions
+# import benchmark
 
 from webhooks import members
 
@@ -73,6 +74,7 @@ class Bot(discord.Client):
             case "TESTING":
                 return restricted
 
+    # @benchmark.timer
     async def handle_response(self, response:list[dict]|None, channel:discord.TextChannel|discord.Thread) -> None:
         if response is None:
             return
