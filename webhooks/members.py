@@ -1,4 +1,5 @@
 import json
+import random
 import discord
 
 with open("webhooks/meta/members.json", "r") as file:
@@ -32,11 +33,11 @@ def handle(command:list[str], curr:dict, default:dict, ap:bool, message:discord.
     match command[1].lower():
         case "list":
             if len(command) <= 3:
-                return list_all()
+                return list_all(message.guild.id)
             if command[2] == "all":
-                return list_all()
+                return list_all(message.guild.id)
             else:
-                return list_by_tag(command[2].lower())
+                return list_by_tag(command[2].lower(), message.guild.id)
         case "show":
             if len(command) <= 3:
                 return member_info(get_front(curr, default, ap), message.guild.id)
@@ -59,10 +60,14 @@ def filter_members(func) -> dict:
             out[key] = member
     return out
 
-def list_all() -> list[dict]:
+def list_all(server:int) -> list[dict]:
     member_list = []
-    for key, member in filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).items():
-        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc-short", "")}*' if member.get("desc-short", None) is not None else ""}")
+    for key, member in sorted(filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).items()):
+        username = f"@{member.get("username")}"
+        nick = get_nickname_by_id(key, server)
+        if nick is not None:
+            username = f"@{nick}"
+        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}) {username} {f'\n- *{member.get("desc-short", "")}*' if member.get("desc-short", None) is not None else ""}")
 
     count = f"{str(len(member_list))}"
     if len(members)-len(member_list)-1:
@@ -70,20 +75,25 @@ def list_all() -> list[dict]:
     desc = members["_"].get("desc-long").replace("$count", count)
     # desc += f"\n\nCurrent count: {len(members)-1} (+{len(members)-len(member_list)-1} hidden member(s), no we won't show you :p)"
     
-    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"The Daybreak System",description=desc)
+    colors = list(member.get("color", "#5b6078") for member in filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).values())
+    color = random.randint(0, len(colors)-1)
+    embed = discord.Embed(color=discord.Color.from_str(colors[color]), title=f"The Daybreak System",description=desc)
     
-    member_list.sort()
     member_list = "\n".join(member_list)
     embed.add_field(name="Members", value=member_list)
     
-    embed.set_footer(text="To see more information about a member, use &member <id>")
+    embed.set_footer(text="To see more information about a member, use &member <id>. \nIds are listed before information about a member.")
 
     return [{"type":"message","message":"","embed":[embed],"except":True}]
 
-def list_by_tag(tag:str):
+def list_by_tag(tag:str, server:int):
     member_list = []
-    for key, member in filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", []))).items():
-        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc-short", "")}*' if member.get("desc-short", None) is not None else ""}")
+    for key, member in sorted(filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", []))).items()):
+        username = f"@{member.get("username")}"
+        nick = get_nickname_by_id(key, server)
+        if nick is not None:
+            username = f"@{nick}"
+        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}) {username} {f'\n- *{member.get("desc-short", "")}*' if member.get("desc-short", None) is not None else ""}")
 
     hidden_members = filter_members(lambda x, y: ("no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", [])))
 
@@ -92,9 +102,14 @@ def list_by_tag(tag:str):
         count += f" (+{str(len(hidden_members))} for {str(len(hidden_members) + len(member_list))} total)"
     desc = members["_"].get("desc-long").replace("$count", count)
     # desc += f"\n\nCurrent count: {len(member_list)+len(hidden_members)} (+{len(hidden_members)} hidden member(s), no we won't show you :p)"
-    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members with tag `{tag}`",description=desc)
+    
+    colors = list(member.get("color", "#5b6078") for member in filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", []))).values())
+    color = random.randint(0, len(colors)-1)
+    if len(colors) == 0:
+        colors = ["#cb2956"]
+        color = 0
+    embed = discord.Embed(color=discord.Color.from_str(colors[color]), title=f"Members with tag `{tag}`",description=desc)
 
-    member_list.sort()
     member_list = "\n".join(member_list)
     if member_list != '':
         embed.add_field(name="Members", value=member_list)
@@ -138,7 +153,7 @@ def member_info(id:str, server:int) -> list[dict]:
     if nick is not None:
         embed_title = f"{nick} ({embed_title})"
 
-    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#181926")),title=f"{embed_title}",description=embed_desc)
+    embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#5b6078")),title=f"{embed_title}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
 
     if names_l:

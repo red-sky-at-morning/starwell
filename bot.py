@@ -26,7 +26,7 @@ class Bot(discord.Client):
         self.author:discord.User
         self.last_sent_message:discord.Message = None
 
-        self.curr_member = members.get_member("byte")
+        self.curr_member = members.get_member("sky")
         self.ap = True
         self.default_member = self.curr_member
 
