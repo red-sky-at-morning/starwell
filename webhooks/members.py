@@ -60,11 +60,17 @@ def filter_members(func) -> dict:
     return out
 
 def list_all() -> list[dict]:
-    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"The Daybreak System",description=members["_"].get("about"))
-    
     member_list = []
-    for key, member in filter_members(lambda x, y: not "no-list" in y.get("tags", [])).items():
-        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc", "")}*' if member.get("desc", None) is not None else ""}")
+    for key, member in filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).items():
+        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc-short", "")}*' if member.get("desc-short", None) is not None else ""}")
+
+    count = f"{str(len(member_list))}"
+    if len(members)-len(member_list)-1:
+        count += f" (+{str(len(members)-len(member_list)-1)} for {str(len(members)-1)} total)"
+    desc = members["_"].get("desc-long").replace("$count", count)
+    # desc += f"\n\nCurrent count: {len(members)-1} (+{len(members)-len(member_list)-1} hidden member(s), no we won't show you :p)"
+    
+    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"The Daybreak System",description=desc)
     
     member_list.sort()
     member_list = "\n".join(member_list)
@@ -75,11 +81,18 @@ def list_all() -> list[dict]:
     return [{"type":"message","message":"","embed":[embed],"except":True}]
 
 def list_by_tag(tag:str):
-    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members with tag `{tag}`",description=members["_"].get("about"))
-    
     member_list = []
-    for key, member in filter_members(lambda x, y: (not "no-list" in y.get("tags", [])) and (tag in y.get("tags", []))).items():
-        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc", "")}*' if member.get("desc", None) is not None else ""}")
+    for key, member in filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", []))).items():
+        member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}){f'\n- *{member.get("desc-short", "")}*' if member.get("desc-short", None) is not None else ""}")
+
+    hidden_members = filter_members(lambda x, y: ("no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", [])))
+
+    count = f"{str(len(member_list))}"
+    if len(hidden_members):
+        count += f" (+{str(len(hidden_members))} for {str(len(hidden_members) + len(member_list))} total)"
+    desc = members["_"].get("desc-long").replace("$count", count)
+    # desc += f"\n\nCurrent count: {len(member_list)+len(hidden_members)} (+{len(hidden_members)} hidden member(s), no we won't show you :p)"
+    embed = discord.Embed(color=discord.Color.from_str("#cb2956"), title=f"Members with tag `{tag}`",description=desc)
 
     member_list.sort()
     member_list = "\n".join(member_list)
@@ -96,12 +109,12 @@ def list_by_tag(tag:str):
 
 def show_all(server:int) -> list[dict]:
     response = []
-    for key, in sorted(filter_members(lambda x, y: not "no-list" in y.get("tags", [])).keys()):
+    for key, in sorted(filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).keys()):
         response += member_info(key, server)
     return response
 
-def show_by_tags(server:int, tags:list[str]) -> list[dict]:
-    for key, in sorted(filter_members(lambda x, y: (not "no-list" in y.get("tags", [])) and (tag in y.get("tags", []))).keys()):
+def show_by_tag(server:int, tag:list[str]) -> list[dict]:
+    for key, in sorted(filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []))).keys()):
         response += member_info(key, server)
     return response
 
@@ -115,10 +128,10 @@ def member_info(id:str, server:int) -> list[dict]:
     names_l = member.get("names").copy()
     del names_l[member.get("name", 0)]
     embed_desc = f"{member.get("names")[member.get("name", 0)]}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
-    member_desc = member.get("desc", None)
+    member_desc = member.get("desc-short", None)
     if member_desc is not None:
         embed_desc += f" *{member_desc}*"
-    embed_desc += f"\n{member.get("about", "")}"
+    embed_desc += f"\n{member.get("desc-long", "")}"
     
     embed_title = f"@{member.get("username")}"
     nick = get_nickname_by_id(id, server)
@@ -134,8 +147,17 @@ def member_info(id:str, server:int) -> list[dict]:
         embed.add_field(name="Status", value=member.get("presence"), inline=False)
     if member.get("replacement"):
         embed.add_field(name="Text", value=member.get("replacement"), inline=False)
-    if member.get("tags"):
-        embed.set_footer(text=str(member.get("tags")).strip("[]").replace("'", ""))
+    desc = ""
+    if member.get("tags-util"):
+        desc += f"Util: {str(member.get("tags-util")).strip("[]").replace("'", "")}"
+    
+    if member.get("tags-desc"):
+        if (member.get("tags-util")):
+            desc += " | "
+        desc += f"Desc: {str(member.get("tags-desc")).strip("[]").replace("'", "")}"
+
+    if desc:
+        embed.set_footer(text=desc)
 
     return [{"type":"message","message":"","embed":[embed], "except":True}]
 
@@ -203,7 +225,17 @@ def edit_member(id:str, key:str, val:any, **kwargs) -> int:
             else:
                 members[id]["names"].append(val)
                 members[id][key] = members[id]["names"].index(val)
-        case "tags" | "names":
+        case "tags":
+            tagtype = "tags-desc"
+            if val in members["_"].get("tags-util"):
+                tagtype = "tags-util"
+            tags = members[id].get(tagtype, [])
+            if val in tags:
+                tags.remove(val)
+            else:
+                tags.append(val)
+            members[id][tagtype] = tags
+        case "names":
             tags = members[id].get(key, [])
             if val in tags:
                 tags.remove(val)
@@ -213,7 +245,7 @@ def edit_member(id:str, key:str, val:any, **kwargs) -> int:
         case "presence" | "status":
             members[id]["presence"] = val
             out = 2
-        case "nick":
+        case "nick | nickname":
             server_id = kwargs.get("server")
             if server_id is None:
                 return 0

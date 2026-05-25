@@ -21,11 +21,11 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
 
     if member_name is None:
         if auto:
-            if curr_member == None or "no-hooks" in curr_member.get("tags", []):
+            if curr_member == None or "no-hooks" in curr_member.get("tags-util", []):
                 return []
             else:
                 return [{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
-        if default_member == None or "no-hooks" in default_member.get("tags", []): 
+        if default_member == None or "no-hooks" in default_member.get("tags-util", []): 
             return []
         else:
             return [{"type":"message","message":text, "use-default":True,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
@@ -33,9 +33,9 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
     member = members.get_member(member_name)
     # print(member)
     
-    if "no-hooks" in member.get("tags", []):
+    if "no-hooks" in member.get("tags-util", []):
         return [{"type":"webhook","id":member_name}]
-    if not "keep-repl" in member.get("tags", []):
+    if not "keep-repl" in member.get("tags-util", []):
         text = trim_replacement(text, member.get("replacement"))
     
     return [{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]

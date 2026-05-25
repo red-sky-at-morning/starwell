@@ -144,7 +144,7 @@ async def create_help(self, id, message) -> dict:
         embed.add_field(name="*&ap", value="*Toggles Autoproxy. Reacts with the new state of Autoproxy.*")
         embed.add_field(name="*&setfront", value="*Sets the default user to the last member speaking.*\nSubcommands:\n- &setfront <id>: *Sets the default member to a specific user.*")
         embed.add_field(name="*&useradd <id>", value="*Adds a new user. <id> is a required argument.*")
-        embed.add_field(name="*&usermod <id> <key> <val>", value="*Changes a value of a user. <id>, <key>, and <val> are required.*\nAllowed keys:\n- name\n- names\n- username\n- pronouns\n- avatar\n- color\n- desc\n- replacement\n- tags\n- presence\n- emoji*")
+        embed.add_field(name="*&usermod <id> <key> <val>", value="*Changes a value of a user. <id>, <key>, and <val> are required.*\nAllowed keys:`name`, `names`, `username`, `nick | nickname`, `pronouns`, `avatar`, `color`, `desc-short`, `desc-long`, `replacement`, `presence | status`, `tags`, `emoji`*")
         embed.add_field(name="*&chmod <enable|disable>", value="*Enables or disables proxying in a channel.*\nSubcommands:\n- &chmod <enable|disable> <reason>: *Enables or disables proxying in a channel, and sets a reason.*")
         embed.add_field(name="*&svmod <enable|disable>", value="*Enables or disables proxying in a server.*\nSubcommands:\n- &svmod <enable|disable> <reason>: *Enables or disables proxying in a server, and sets a reason.*")
         # Member reply-only commands

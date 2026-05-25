@@ -23,7 +23,10 @@ async def message(self: discord.Client, item:list[dict]|None, channel:discord.Te
             resolve = item.get("reference").resolved
             if resolve != None:
                 attachment_len = len(resolve.attachments) + len(resolve.embeds)
-                embed = discord.Embed(description=f"[Reply to]({resolve.jump_url}): {resolve.content if len(resolve.content) >= 1 else "[no content]"} {"(includes attatchment)" if attachment_len > 0 else ""}")
+                color = None
+                if self.default_member.get("color", None):
+                    color = discord.Color.from_str(self.default_member.get("color"))
+                embed = discord.Embed(description=f"[Reply to]({resolve.jump_url}): {resolve.content if len(resolve.content) >= 1 else "[no content]"} {"(includes attatchment)" if attachment_len > 0 else ""}", color=color)
                 embed.set_author(name=resolve.author.name, icon_url=resolve.author.display_avatar.url)
                 if item.get("embed") != None:
                     item["embed"].insert(0, embed)
