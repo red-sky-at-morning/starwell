@@ -28,39 +28,39 @@ def handle(command:list[str], curr:dict, default:dict, ap:bool, message:discord.
     
     # show front if just the command is sent
     if len(command) <= 2:
-        return member_info(get_front(curr, default, ap), message.guild.id)
+        return member_info(get_front(curr, default, ap), message.guild)
     
     match command[1].lower():
         case "list":
             if len(command) <= 3:
-                return list_all(message.guild.id)
+                return list_all(message.guild)
             if command[2] == "all":
-                return list_all(message.guild.id)
+                return list_all(message.guild)
             else:
-                return list_by_tag(command[2].lower(), message.guild.id)
+                return list_by_tag(command[2].lower(), message.guild)
         case "show":
             if len(command) <= 3:
-                return member_info(get_front(curr, default, ap), message.guild.id)
+                return member_info(get_front(curr, default, ap), message.guild)
             if command[2] == "all":
-                return show_all()
+                return show_all(message.guild)
             else:
                 if command[2].lower() in members.keys():
-                    return member_info(command[2].lower(), message.guild.id)
+                    return member_info(command[2].lower(), message.guild)
                 else:
-                    return show_by_tag(command[2].lower())
+                    return show_by_tag(message.guild, command[2].lower())
         case _:
-            return member_info(command[1].lower(), message.guild.id)
+            return member_info(command[1].lower(), message.guild)
 
 # funcs for listing
 
 def filter_members(func) -> dict:
     out = {}
-    for key, member in members.items():
+    for key, member in members["members"].items():
         if func(key, member):
             out[key] = member
     return out
 
-def list_all(server:int) -> list[dict]:
+def list_all(server:discord.Guild) -> list[dict]:
     member_list = []
     for key, member in sorted(filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).items()):
         username = f"@{member.get("username")}"
@@ -69,10 +69,12 @@ def list_all(server:int) -> list[dict]:
             username = f"@{nick}"
         member_list.append(f"`{key}`: {member.get("names", "")[member.get("name")]} ({member.get("pronouns", "none set")}) {username} {f'\n- *{member.get("desc-short", "")}*' if member.get("desc-short", None) is not None else ""}")
 
+    hidden_members = filter_members(lambda x, y: ("no-list" in y.get("tags-util", [])))
+
     count = f"{str(len(member_list))}"
-    if len(members)-len(member_list)-1:
-        count += f" (+{str(len(members)-len(member_list)-1)} for {str(len(members)-1)} total)"
-    desc = members["_"].get("desc-long").replace("$count", count)
+    if len(hidden_members):
+        count += f" (+{str(len(hidden_members))} hidden for {str(len(hidden_members) + len(member_list))} total)"
+    desc = members["meta"].get("desc-long").replace("$count", count)
     # desc += f"\n\nCurrent count: {len(members)-1} (+{len(members)-len(member_list)-1} hidden member(s), no we won't show you :p)"
     
     colors = list(member.get("color", "#5b6078") for member in filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).values())
@@ -86,7 +88,7 @@ def list_all(server:int) -> list[dict]:
 
     return [{"type":"message","message":"","embed":[embed],"except":True}]
 
-def list_by_tag(tag:str, server:int):
+def list_by_tag(tag:str, server:discord.Guild):
     member_list = []
     for key, member in sorted(filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", []))).items()):
         username = f"@{member.get("username")}"
@@ -99,8 +101,8 @@ def list_by_tag(tag:str, server:int):
 
     count = f"{str(len(member_list))}"
     if len(hidden_members):
-        count += f" (+{str(len(hidden_members))} for {str(len(hidden_members) + len(member_list))} total)"
-    desc = members["_"].get("desc-long").replace("$count", count)
+        count += f" (+{str(len(hidden_members))} hidden for {str(len(hidden_members) + len(member_list))} total)"
+    desc = members["meta"].get("desc-long").replace("$count", count)
     # desc += f"\n\nCurrent count: {len(member_list)+len(hidden_members)} (+{len(hidden_members)} hidden member(s), no we won't show you :p)"
     
     colors = list(member.get("color", "#5b6078") for member in filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", []))).values())
@@ -122,21 +124,22 @@ def list_by_tag(tag:str, server:int):
 
 # funcs for showing
 
-def show_all(server:int) -> list[dict]:
+def show_all(server:discord.Guild) -> list[dict]:
     response = []
-    for key, in sorted(filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).keys()):
+    for key in sorted(filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).keys()):
         response += member_info(key, server)
     return response
 
-def show_by_tag(server:int, tag:list[str]) -> list[dict]:
-    for key, in sorted(filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []))).keys()):
+def show_by_tag(server:discord.Guild, tag:str) -> list[dict]:
+    response = []
+    for key in sorted(filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-desc", []))).keys()):
         response += member_info(key, server)
     return response
 
 # helpers
 
-def member_info(id:str, server:int) -> list[dict]:
-    member = members.get(id, None)
+def member_info(id:str, server:discord.Guild) -> list[dict]:
+    member = members["members"].get(id, None)
     if not member:
         return[{"type":"message","message":"That member does not exist (yet?)! Sorry!", "except": True}]
 
@@ -150,7 +153,7 @@ def member_info(id:str, server:int) -> list[dict]:
     
     embed_title = f"@{member.get("username")}"
     nick = get_nickname_by_id(id, server)
-    if nick is not None:
+    if nick is not None and nick != member.get("username"):
         embed_title = f"{nick} ({embed_title})"
 
     embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#5b6078")),title=f"{embed_title}",description=embed_desc)
@@ -176,28 +179,36 @@ def member_info(id:str, server:int) -> list[dict]:
 
     return [{"type":"message","message":"","embed":[embed], "except":True}]
 
-def get_nickname_by_id(id:str, server:int):
-    member = members.get(id)
-    return member.get("nick", {}).get(server.__str__(), None)
+def get_nickname_by_id(id:str, server:discord.Guild):
+    member = members["members"].get(id)
+    return get_nickname(member, server)
 
-def get_nickname(member:dict, server:id):
-    return member.get("nick", {}).get(server.__str__(), None)
+def get_nickname(member:dict, server:discord.Guild):
+    if "copy-nick" in member.get("tags-util", []):
+        print(server)
+        id = members["meta"].get("user_id", -1)
+        user = server.get_member(id)
+        print(server.members)
+        return user.nick if user.nick is not None else user.global_name
+    
+    return member.get("nick", {}).get(server.id.__str__(), member.get("username"))
 
 def get_member(id:str) -> dict | None:
-    return members.get(id, None)
+    return members["members"].get(id, None)
 
 def get_member_by_username(username:str) -> str:
-    filtered = list(filter(lambda x: x.get("username") == username, list(members.copy().values())))
-    return [key for key, value in members.items() if value == filtered[0]][0]
+    for key, val in members["members"].items():
+        if val.get("username", "") == username:
+            return key
 
 def get_front(curr:dict, default:dict, ap:bool) -> str:
     if ap:
-        return get_member_by_username(curr.get("username", "nullrefexception"))
+        return get_member_by_username(curr.get("username"))
     else:
-        return get_member_by_username(default.get("username", "nullrefexception"))
+        return get_member_by_username(default.get("username"))
 
 def get_all_replacements() -> dict:
-    return {name:item.get("replacement", None) for name,item in zip(members.keys(), members.values())}
+    return {name:item.get("replacement", None) for name, item in members["members"].items()}
 
 # usermods
 
@@ -212,70 +223,72 @@ def handle_usermod(id:str, args:list[str], type:str, server:int):
             return [{"type":"message", "message":"Sorry, I don't know how to add that user!","except":True}]
         case "edit":
             match edit_member(id, args[0], args[1], server=server):
-                case 1:
-                    out = [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True}]
-                case 2:
-                    out = [{"type":"message","message":f"Editied member {id}'s {args[0]}: {args[1]}", "except":True},{"type":"presence","default":True}]
+                case "invalid key":
+                    out = [{"type":"message","message":f"That is not a field that you can edit!", "except":True}]
+                case "invalid id":
+                    out = [{"type":"message","message":f"That member does not exist!", "except":True}]
+                case "presence changed":
+                    out = [{"type":"message","message":f"Edited member {id}'s {args[0]}: {args[1]}", "except":True},{"type":"presence","default":True}]
                 case _:
-                    return [{"type":"message", "message":"Sorry, I don't know how to edit that value!", "except":True}]
+                    out = [{"type":"message","message":f"Edited member {id}'s {args[0]}: {args[1]}", "except":True}]
             return out
 
 def add_member(id:str) -> bool:
-    members[id] = {"name":0, "names":[id.capitalize()], "username":id}
+    members["members"][id] = {"name":0, "names":[id.capitalize()], "username":id}
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
     return True
 
 valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji", "nick", "id")
-def edit_member(id:str, key:str, val:any, **kwargs) -> int:
+def edit_member(id:str, key:str, val:any, **kwargs) -> str:
     if key not in valid_keys:
-        return 0
-    if id not in members.keys():
-        return 0
+        return "invalid key"
+    if id not in members["members"].keys():
+        return "invalid id"
     out = 1
     match key:
         case "name":
-            if val in members[id]["names"]:
-                members[id][key] = members[id]["names"].index(val)
+            if val in members["members"][id]["names"]:
+                members["members"][id][key] = members["members"][id]["names"].index(val)
             else:
-                members[id]["names"].append(val)
-                members[id][key] = members[id]["names"].index(val)
+                members["members"][id]["names"].append(val)
+                members["members"][id][key] = members["members"][id]["names"].index(val)
         case "tags":
             tagtype = "tags-desc"
-            if val in members["_"].get("tags-util"):
+            if val in members["meta"].get("tags-util"):
                 tagtype = "tags-util"
-            tags = members[id].get(tagtype, [])
+            tags = members["members"][id].get(tagtype, [])
             if val in tags:
                 tags.remove(val)
             else:
                 tags.append(val)
-            members[id][tagtype] = tags
+            members["members"][id][tagtype] = tags
         case "names":
-            tags = members[id].get(key, [])
+            tags = members["members"][id].get(key, [])
             if val in tags:
                 tags.remove(val)
             else:
                 tags.append(val)
-            members[id][key] = tags
+            members["members"][id][key] = tags
         case "presence" | "status":
-            members[id]["presence"] = val
-            out = 2
-        case "nick | nickname":
+            members["members"][id]["presence"] = val
+            out = "presence changed"
+        case "nick" | "nickname":
             server_id = kwargs.get("server")
             if server_id is None:
                 return 0
-            if members.get(id).get("nick", None) is None:
-                members[id]["nick"] = {}
+            if members["members"].get(id).get("nick", None) is None:
+                members["members"][id]["nick"] = {}
             if not val:
-                del members[id]["nick"][server_id.__str__()]
+                del members["members"][id]["nick"][server_id.__str__()]
             else:
-                members[id]["nick"][server_id.__str__()] = val
+                members["members"][id]["nick"][server_id.__str__()] = val
         case "id":
-            member_data = members[id]
-            del members[id]
-            members[val] = member_data
+            member_data = members["members"][id]
+            del members["members"][id]
+            members["members"][val] = member_data
         case _:
-            members[id][key] = val
+            members["members"][id][key] = val
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)
     return out

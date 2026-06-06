@@ -43,12 +43,12 @@ async def message(self: discord.Client, item:list[dict]|None, channel:discord.Te
 
         # send the message
         if item.get("use-default", False):
-            name = members.get_nickname(self.default_member, channel.guild.id)
+            name = members.get_nickname(self.default_member, channel.guild)
             if name is None:
                 name = self.default_member.get("username", None)
             self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=name, avatar_url=self.default_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
             return
-        name = members.get_nickname(self.curr_member, channel.guild.id)
+        name = members.get_nickname(self.curr_member, channel.guild)
         if name is None:
             name = self.curr_member.get("username", None)
         self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=name, avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
