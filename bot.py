@@ -219,5 +219,6 @@ if __name__ == "__main__":
     intents = discord.Intents.default()
     intents.message_content = True
     intents.reactions = True
+    intents.members = True
     starwell = Bot(intents=intents)
     starwell.startup()

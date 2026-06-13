@@ -148,8 +148,8 @@ def member_info(id:str, server:discord.Guild) -> list[dict]:
     embed_desc = f"{member.get("names")[member.get("name", 0)]}{f' ({member.get("pronouns")})' if member.get("pronouns") else ""}"
     member_desc = member.get("desc-short", None)
     if member_desc is not None:
-        embed_desc += f" *{member_desc}*"
-    embed_desc += f"\n{member.get("desc-long", "")}"
+        embed_desc += f"\n *{member_desc}*"
+    embed_desc += f"\n\n{member.get("desc-long", "")}"
     
     embed_title = f"@{member.get("username")}"
     nick = get_nickname_by_id(id, server)
