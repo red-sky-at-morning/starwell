@@ -22,7 +22,7 @@ def handle_message(message: discord.Message, content:str, channel_id, user_id:in
     m_list[0] = m_list[0].lower()
     m_list.append(content)
     response:list = []
-    response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"))
+    response += message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"), (kwargs.get("blur"), kwargs.get("blurred")))
     response += public_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"), kwargs.get("mentioned"))
     response += member_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"))
     response += reply_commands(m_list, message, channel_id, user_id, server, kwargs.get("ap"))
@@ -58,6 +58,11 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
     match command[0][1:]:
         case "ap":
             response += [{"type":"special","action":"toggle_ap"},{"type":"react","react":"🔴" if ap else "🟢","message":message}]
+        case "blur":
+            if len(command) <= 2:
+                response += [{"type":"special","action":"blur","enable": False}]
+            else:
+                response += [{"type": "special", "action":"blur", "enable": True, "member":command[1:-1]}]
         case "setfront":
             if len(command) <= 2:
                 response += [{"type": "webhook", "id":None, "default":True}]
@@ -100,11 +105,11 @@ def reply_commands(command:list[str], message:discord.Message, channel_id:int, u
             response += [{"type":"delete","message":message.id}, {"type":"delete","message":rp_message.id}]
     return response
 
-def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict, default:dict) -> list[dict]:
+def message_replacement(command:list[str], message:discord.Message, channel_id:int, user_id:int, server:int, ap:bool, curr:dict, default:dict, blur:tuple[bool, list[str]]) -> list[dict]:
     response:list = []
     if user_id not in trusted_ids:
         return response
-    response += replacement.handle_message(command, message, user_id, ap, curr, default)
+    response += replacement.handle_message(command, message, user_id, ap, curr, default, blur)
     return response
 
 def handle_react(message:discord.Message, emoji:discord.PartialEmoji, count, channel_id:int, user_id:int, server:int) -> list[dict]:

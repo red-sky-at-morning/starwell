@@ -4,7 +4,7 @@ import discord
 from webhooks import members
 from replacement import enable
 
-def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict, default_member:dict) -> list[dict]:
+def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, curr_member:dict, default_member:dict, blur:tuple[bool, list]) -> list[dict]:
     if len(text) < 1:
         if len(message.attachments) + len(message.embeds) <= 0:
             return []
@@ -21,7 +21,9 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
 
     if member_name is None:
         if auto:
-            if curr_member == None or "no-hooks" in curr_member.get("tags-util", []):
+            if blur[0] == True:
+                return [{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
+            elif curr_member == None or "no-hooks" in curr_member.get("tags-util", []):
                 return []
             else:
                 return [{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
@@ -29,6 +31,9 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
             return []
         else:
             return [{"type":"message","message":text, "use-default":True,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
+    
+    if member_name == "blur":
+        return [{"type":"special", "action":"blur", "enable": True},{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
     
     member = members.get_member(member_name)
     # print(member)

@@ -27,8 +27,11 @@ class Bot(discord.Client):
         self.last_sent_message:discord.Message = None
 
         self.curr_member = members.get_member("sky")
-        self.ap = True
         self.default_member = self.curr_member
+
+        self.ap = True
+        self.blur = False
+        self.blurred = []
 
     async def on_ready(self):
         with open("meta/params.json", "r") as params:
@@ -128,6 +131,22 @@ class Bot(discord.Client):
                             self.ap = not self.ap
                             self.default_member = self.curr_member
                             response.append({"type":"presence", "default":True})
+                        case "blur":
+                            if not item.get("enable", False):
+                                self.blur = False
+                                self.blurred = []
+                                response.append({"type":"message","message":"Front is no longer blurred","except":True})
+                            else:
+                                if not self.blur:
+                                    self.blur = True
+                                if self.blurred == []:
+                                    self.blurred.append(members.get_front(self.curr_member, self.default_member, self.ap))
+                                if item.get("member", None) is not None:
+                                    for member in item.get("member"):
+                                        if not member in self.blurred:
+                                            self.blurred.append(member)
+                                    # self.blurred.sort()
+                                response.append({"type":"message","message":f"Front is now blurred between {', '.join(self.blurred)}","except":True})
                         case _:
                             raise TypeError("Unexpected action in response")
                 
@@ -194,7 +213,7 @@ class Bot(discord.Client):
         if not self.verify_mode(server_id, channel_id, user_id):
             return False
 
-        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message), ap=self.ap, curr=self.curr_member, default=self.default_member)
+        response = responses.handle_message(message, content, channel_id, user_id, server_id, mentioned=self.user.mentioned_in(message), ap=self.ap, curr=self.curr_member, default=self.default_member, blur=self.blur, blurred=self.blurred)
         await self.handle_response(response, channel)
 
         return True

@@ -208,7 +208,9 @@ def get_front(curr:dict, default:dict, ap:bool) -> str:
         return get_member_by_username(default.get("username"))
 
 def get_all_replacements() -> dict:
-    return {name:item.get("replacement", None) for name, item in members["members"].items()}
+    out = {name:item.get("replacement", None) for name, item in members["members"].items()}
+    out["blur"] = members["meta"].get("blur_repl")
+    return out
 
 # usermods
 
@@ -266,7 +268,9 @@ def edit_member(id:str, key:str, val:any, **kwargs) -> str:
         case "names":
             tags = members["members"][id].get(key, [])
             if val in tags:
+                name = tags[members["members"][id]["name"]]
                 tags.remove(val)
+                members["members"][id]["name"] = tags.index(name)
             else:
                 tags.append(val)
             members["members"][id][key] = tags
