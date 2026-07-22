@@ -128,8 +128,11 @@ async def presence(self:discord.Client, item:list[dict]|None, channel:discord.Te
         presence = item.get("presence", f"{self.curr_member.get("presence", "watching the stars")}")
     
     emoji = "🟢" if self.ap else "🔴"
-    if self.curr_member.get("emoji", None) is not None:
-        emoji += self.curr_member.get("emoji")
+    emoji += self.curr_member.get("emoji", "")
+    if self.blur and self.ap:
+        for member in self.blurred:
+            if members.get_member(member) != self.curr_member:
+                emoji += members.get_member(member).get("emoji", "")
     
     presence = f"{emoji} | {presence}"
     await self.change_presence(activity=discord.CustomActivity(name=presence))

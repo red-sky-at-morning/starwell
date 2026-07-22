@@ -147,6 +147,7 @@ class Bot(discord.Client):
                                             self.blurred.append(member)
                                     # self.blurred.sort()
                                 response.append({"type":"message","message":f"Front is now blurred between {', '.join(self.blurred)}","except":True})
+                                response.append({"type":"presence","default":True})
                         case _:
                             raise TypeError("Unexpected action in response")
                 
