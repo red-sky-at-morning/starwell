@@ -17,7 +17,7 @@ with open("meta/params.json", "r") as params:
 # @benchmark.timer
 def handle_message(message: discord.Message, content:str, channel_id, user_id:int, server:int, **kwargs) -> list[dict]:
     if not content:
-        return message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"))
+        return message_replacement(content, message, channel_id, user_id, server, kwargs.get("ap"), kwargs.get("curr"), kwargs.get("default"), (kwargs.get("blur"), kwargs.get("blurred")))
     m_list:list = content.split()
     m_list[0] = m_list[0].lower()
     m_list.append(content)
@@ -61,6 +61,7 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
         case "blur":
             if len(command) <= 2:
                 response += [{"type":"special","action":"blur","enable": False}]
+                response += [{"type":"presence","default":True}]
             else:
                 response += [{"type": "special", "action":"blur", "enable": True, "member":command[1:-1]}]
         case "setfront":

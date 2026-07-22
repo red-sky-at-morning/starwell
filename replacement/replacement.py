@@ -33,8 +33,9 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
             return [{"type":"message","message":text, "use-default":True,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
     
     if member_name == "blur":
+        text = trim_replacement(text, members.members["meta"].get("blur_repl"))
         return [{"type":"special", "action":"blur", "enable": True},{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
-    
+
     member = members.get_member(member_name)
     # print(member)
     
@@ -42,7 +43,7 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
         return [{"type":"webhook","id":member_name}]
     if not "keep-repl" in member.get("tags-util", []):
         text = trim_replacement(text, member.get("replacement"))
-    
+
     return [{"type":"webhook","id":member_name},{"type":"message","message":text,"files":message.attachments,"embed":list(filter(lambda x: x.type == "rich", message.embeds)),"reference":message.reference},{"type":"delete","message":message}]
 
 def has_replacement(text:str) -> str | None:
