@@ -159,10 +159,16 @@ def member_info(id:str, server:discord.Guild) -> list[dict]:
     embed = discord.Embed(color=discord.Color.from_str(member.get("color", "#5b6078")),title=f"{embed_title}",description=embed_desc)
     embed.set_thumbnail(url=member.get("avatar", None))
 
+    if member.get("banner", None) is not None:
+        embed.set_image(url=member.get("banner"))
+        # embed.add_field(value=)
+
     if names_l:
         embed.add_field(name="Aka", value=", ".join(names_l), inline=False)
     if member.get("presence"):
-        embed.add_field(name="Status", value=member.get("presence"), inline=False)
+        presence = member.get("presence")
+        if member.get("emoji", None) is not None: presence = f"{member.get("emoji")} | {presence}"
+        embed.add_field(name="Status", value=presence, inline=False)
     if member.get("replacement"):
         embed.add_field(name="Text", value=member.get("replacement"), inline=False)
     desc = ""
@@ -241,7 +247,7 @@ def add_member(id:str) -> bool:
         json.dump(members, file)
     return True
 
-valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji", "nick", "id")
+valid_keys:tuple = ("name", "names", "username", "pronouns", "avatar", "color", "desc", "about", "replacement", "tags", "presence", "status", "emoji", "nick", "id", "banner")
 def edit_member(id:str, key:str, val:any, **kwargs) -> str:
     if key not in valid_keys:
         return "invalid key"
