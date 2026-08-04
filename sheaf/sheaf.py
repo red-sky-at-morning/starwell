@@ -4,6 +4,7 @@ import asyncio
 import json
 
 from webhooks import members
+import response_functions
 
 # on startup, subscribe to sse events
 def startup(self) -> None:
@@ -51,6 +52,7 @@ async def heartbeat(self) -> None:
                     member = members.get_member(member)
                     self.sheaf_status["members"].append(member)
                 print("sheaf_status assigned")
+                await response_functions.presence(self, {"type":"presence","default":True},None)
 
     except asyncio.exceptions.CancelledError:
         # sse_events = sse_client.EventSource("https://many.skiesatmorning.com/v1/fronts/stream", headers={
