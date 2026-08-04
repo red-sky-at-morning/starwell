@@ -242,6 +242,7 @@ def handle_usermod(id:str, args:list[str], type:str, server:int):
             return out
 
 def add_member(id:str) -> bool:
+    id = id[:6]
     members["members"][id] = {"name":0, "names":[id.capitalize()], "username":id}
     with open("webhooks/meta/members.json", "w") as file:
         json.dump(members, file)

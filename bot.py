@@ -1,15 +1,15 @@
 import builtins
 import json
 import discord
-# from discord.ext import commands
+from discord.ext import tasks
 import asyncio
+
 import responses
 import response_functions
-# import benchmark
-
 from webhooks import members
+from sheaf import sheaf
 
-class Bot(discord.Client):
+class Bot(discord.AutoShardedClient):
     def __init__(self, intents:discord.Intents):
         super().__init__(intents=intents)
         self.starting_mode = "HYBRID"        
@@ -26,12 +26,16 @@ class Bot(discord.Client):
         self.author:discord.User
         self.last_sent_message:discord.Message = None
 
-        self.curr_member = members.get_member("sky")
+        self.curr_member = members.get_member("byte")
         self.default_member = self.curr_member
 
         self.ap = True
         self.blur = False
         self.blurred = []
+
+        self.sheaf_modes:tuple = ("DISABLED", "DEFAULT", "FULL")
+        self.sheaf_mode = "DEFAULT"
+        self.sheaf_status = {}
 
     async def on_ready(self):
         with open("meta/params.json", "r") as params:
@@ -39,7 +43,9 @@ class Bot(discord.Client):
             self.author = await self.fetch_user(params_json.get("dev_ids")[0])
         if self.mode == "TESTING":
             self.ignore_errors = True
-        await self.change_presence(activity=discord.CustomActivity(name=f"{"🟢" if self.ap else "🔴"}{self.curr_member.get("emoji")} | {self.curr_member.get("presence")}"))
+        await response_functions.presence(self, {"type":"presence","default":True}, None)
+        # await self.change_presence(activity=discord.Activity(name=f"{"🟢" if self.ap else "🔴"}{self.curr_member.get("emoji")} | {self.curr_member.get("presence")}"))
+        print (self.activity)
         print(f"{self.user} is now running!")
 
     async def send_dm(self, user:discord.User, content:str) -> None:
@@ -148,6 +154,14 @@ class Bot(discord.Client):
                                     # self.blurred.sort()
                                 response.append({"type":"message","message":f"Front is now blurred between {', '.join(self.blurred)}","except":True})
                                 response.append({"type":"presence","default":True})
+                        case "set_sheaf_mode":
+                            mode = item.get("mode")
+                            if mode in self.sheaf_modes:
+                                self.sheaf_mode = mode
+                                response.append({"type":"message","message":f"Sheaf integration mode changed to {mode}","except":True})
+                                response.append({"type":"presence","default":True})
+                            else:
+                                raise TypeError(f"{mode} is not a valid sheaf integration mode")
                         case _:
                             raise TypeError("Unexpected action in response")
                 
@@ -218,6 +232,15 @@ class Bot(discord.Client):
         await self.handle_response(response, channel)
 
         return True
+
+    @tasks.loop(seconds=5)
+    async def listen(self):
+        await sheaf.heartbeat(self)
+
+    async def setup_hook(self) -> None:
+        if self.sheaf_mode != "DISABLED":
+            sheaf.startup(self)
+            self.listen.start()
 
     def startup(self) -> None:
         try:

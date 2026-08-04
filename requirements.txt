@@ -1,1 +1,3 @@
 discord
+aiohttp-sse-client2
+requests

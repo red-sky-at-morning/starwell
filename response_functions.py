@@ -123,16 +123,31 @@ async def call(self:discord.Client, item:list[dict]|None, channel:discord.TextCh
 # @benchmark.timer
 async def presence(self:discord.Client, item:list[dict]|None, channel:discord.TextChannel):
     if item.get("default", False):
-        presence = f"{self.curr_member.get("presence", "watching the stars")}"
+        if not self.sheaf_mode == "FULL":
+            presence = f"{self.curr_member.get("presence", "watching the stars")}"
+        else:
+            # if in full sheaf mode set the full presence to the names of fronting members
+            # presence = ""
+            members = [member.get("names")[member.get("name")] for member in self.sheaf_status.get("members", [])]
+            presence = ", ".join(members)
+            if self.sheaf_status.get("custom_status", None):
+                presence += f"{self.sheaf_status}"
     else:
         presence = item.get("presence", f"{self.curr_member.get("presence", "watching the stars")}")
     
     emoji = "🟢" if self.ap else "🔴"
-    emoji += self.curr_member.get("emoji", "")
-    if self.blur and self.ap:
-        for member in self.blurred:
-            if members.get_member(member) != self.curr_member:
-                emoji += members.get_member(member).get("emoji", "")
+    
+    # if sheaf integration is enabled it takes over emojis
+    if not self.sheaf_mode == "DISABLED":
+        for member in self.sheaf_status.get("members", []):
+            emoji += member.get("emoji")
+    else:
+        emoji += self.curr_member.get("emoji", "")
+        if self.blur and self.ap:
+            for member in self.blurred:
+                if members.get_member(member) != self.curr_member:
+                    emoji += members.get_member(member).get("emoji", "")
     
     presence = f"{emoji} | {presence}"
+    print(discord.CustomActivity(name=presence))
     await self.change_presence(activity=discord.CustomActivity(name=presence))
