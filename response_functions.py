@@ -130,8 +130,23 @@ async def presence(self:discord.Client, item:list[dict]|None, channel:discord.Te
             # presence = ""
             members = [member.get("names")[member.get("name")] for member in self.sheaf_status.get("members", [])]
             presence = ", ".join(members)
+            
+            # put 'and' before the last member
+            mems = presence.count(", ") + 1
+            presence = presence.rsplit(", ", 1)
+            if (mems > 2):
+                presence = ", and ".join(presence)
+            elif (mems > 1):
+                presence = " and ".join(presence)
+            else:
+                if type(presence) == list:
+                    presence = presence[0]
+            
             if self.sheaf_status.get("custom_status", None):
-                presence += f"{self.sheaf_status}"
+                if mems > 1:
+                    presence += f" are {self.sheaf_status.get("custom_status")}"
+                else:
+                    presence += f" is {self.sheaf_status.get("custom_status")}"
     else:
         presence = item.get("presence", f"{self.curr_member.get("presence", "watching the stars")}")
     
@@ -139,8 +154,10 @@ async def presence(self:discord.Client, item:list[dict]|None, channel:discord.Te
     
     # if sheaf integration is enabled it takes over emojis
     if not self.sheaf_mode == "DISABLED":
+        emoji += self.curr_member.get("emoji")
         for member in self.sheaf_status.get("members", []):
-            emoji += member.get("emoji")
+            if not member == self.curr_member:
+                emoji += member.get("emoji")
     else:
         emoji += self.curr_member.get("emoji", "")
         if self.blur and self.ap:

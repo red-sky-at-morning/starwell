@@ -26,7 +26,7 @@ async def heartbeat(self) -> None:
                 assert isinstance(event, sse_client.MessageEvent)
                 data = json.JSONDecoder().decode(event.data)
                 data["event_type"] = event.type
-                # print(data.get("event_type"))
+                print(data)
                 
                 fronts = []
                 match data.get("event_type"):
@@ -39,7 +39,11 @@ async def heartbeat(self) -> None:
                     case "ping":
                         return
 
-                self.sheaf_status["custom_status"] = data.get("custom_status", None)
+                custom_status = []
+                for front in data.get("fronts"):
+                    if front.get("custom_status", ""):
+                        custom_status.append(front.get("custom_status", ""))
+                self.sheaf_status["custom_status"] = ", ".join(custom_status)
                 self.sheaf_status["members"] = []
                 for member in fronts:
                     member = requests.get(f"https://many.skiesatmorning.com/v1/members/{member}", headers={
@@ -55,7 +59,4 @@ async def heartbeat(self) -> None:
                 await response_functions.presence(self, {"type":"presence","default":True},None)
 
     except asyncio.exceptions.CancelledError:
-        # sse_events = sse_client.EventSource("https://many.skiesatmorning.com/v1/fronts/stream", headers={
-        #     "Authorization": f"Bearer {API_KEY}"
-        # })
-        return
+        startup(self)
