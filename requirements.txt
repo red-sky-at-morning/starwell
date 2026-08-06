@@ -1,3 +1,5 @@
 discord
-aiohttp-sse-client2
+# aiohttp-sse-client2
+httpx-sse
+httpx
 requests

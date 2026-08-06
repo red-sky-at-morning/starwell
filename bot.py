@@ -161,7 +161,7 @@ class Bot(discord.AutoShardedClient):
                                 response.append({"type":"message","message":f"Sheaf integration mode changed to {mode}","except":True})
                                 response.append({"type":"presence","default":True})
                             else:
-                                raise TypeError(f"{mode} is not a valid sheaf integration mode")
+                                response.append({"type":"message","message":f"{mode} is not a valid sheaf integration mode"})
                         case _:
                             raise TypeError("Unexpected action in response")
                 

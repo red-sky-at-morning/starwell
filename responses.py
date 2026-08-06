@@ -5,6 +5,7 @@ import discord
 from webhooks import members
 from replacement import replacement
 from replacement import enable
+from sheaf import status
 
 # import benchmark
 
@@ -44,6 +45,8 @@ def public_commands(command:list[str], message:discord.Message, channel_id:int, 
             response += [{"type":"call","call":info_tree,"wait_type":"message","check":lambda x: x.author.id == message.author.id}]
         case "member":
             response += members.handle(command, curr, default, ap, message)
+        case "sheaf":
+            response += status.handle(command, user_id, message)
         case "chinfo":
             response += enable.get_formatted_channel(message.channel, message.channel.guild)
 
@@ -58,8 +61,6 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
     match command[0][1:]:
         case "ap":
             response += [{"type":"special","action":"toggle_ap"},{"type":"react","react":"🔴" if ap else "🟢","message":message}]
-        case "sheaf":
-            response += [{"type":"special","action":"set_sheaf_mode","mode":command[1].upper()}]
         case "blur":
             if len(command) <= 2:
                 response += [{"type":"special","action":"blur","enable": False}]

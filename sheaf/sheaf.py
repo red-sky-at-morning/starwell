@@ -1,5 +1,6 @@
-from aiohttp_sse_client2 import client as sse_client
-import requests
+import httpx_sse
+import httpx
+# import requests
 import asyncio
 import json
 
@@ -13,21 +14,31 @@ async def startup(self) -> None:
     with open("meta/SHEAF.txt") as file:
         API_KEY = file.readline().strip()
 
-    sse_events = sse_client.EventSource("https://many.skiesatmorning.com/v1/fronts/stream", headers={
-        "Authorization": f"Bearer {API_KEY}"
-    })
+    # client = httpx.AsyncClient()
+    # event_source = httpx_sse.aconnect_sse(client, "GET", "https://many.skiesatmorning.com/v1/fronts/stream", headers={
+    #     "Authorization": f"Bearer {API_KEY}"
+    # })
     
-    await heartbeat(self, sse_events)
+    await heartbeat(self)
 
 # then on heartbeat check for events
 # if events change status according to self.sheaf_status
-async def heartbeat(self, sse_events) -> None:
-    try:
-        async with sse_events:
-            async for event in sse_events:
-                assert isinstance(event, sse_client.MessageEvent)
-                data = json.JSONDecoder().decode(event.data)
-                data["event_type"] = event.type
+async def heartbeat(self) -> None:
+    async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx_sse.aconnect_sse(
+            client, "GET", "https://many.skiesatmorning.com/v1/fronts/stream",
+            headers={ "Authorization": f"Bearer {API_KEY}" }
+        ) as event_source:
+            async for event in event_source.aiter_sse():
+                # print(event)
+                if not event.data:
+                    # ignore heartbeat events
+                    # (they still extend the asyncClient though)
+                    continue
+                
+                data = event.json()
+                # data = json.JSONDecoder().decode(event.data)
+                data["event_type"] = event.event
                 print(data)
                 
                 fronts = []
@@ -38,8 +49,6 @@ async def heartbeat(self, sse_events) -> None:
                     case "front_change":
                         fronts = data.get("after")
                         print(fronts)
-                    case "ping":
-                        break
 
                 custom_status = []
                 for front in data.get("fronts"):
@@ -48,11 +57,11 @@ async def heartbeat(self, sse_events) -> None:
                 self.sheaf_status["custom_status"] = ", ".join(custom_status)
                 self.sheaf_status["members"] = []
                 for member in fronts:
-                    member = requests.get(f"https://many.skiesatmorning.com/v1/members/{member}", headers={
+                    member = httpx.get(f"https://many.skiesatmorning.com/v1/members/{member}", headers={
                         "Authorization": f"Bearer {API_KEY}"
                     })
-                    assert isinstance(member, requests.Response)
-                    if (not member.ok):
+                    # assert isinstance(member, requests.Response)
+                    if (member.is_error):
                         fronts.remove(member)
                     member = member.json().get("pluralkit_id", "_")
                     member = members.get_member(member)
@@ -62,12 +71,12 @@ async def heartbeat(self, sse_events) -> None:
                 print("sheaf_status assigned")
                 await response_functions.presence(self, {"type":"presence","default":True},None)
 
-    except (asyncio.exceptions.CancelledError, ConnectionError, StopAsyncIteration) as e:
-        await self.on_error(e)
-        self.sheaf_mode = "DISABLED"
-        await response_functions.presence(self, {"type":"presence","default":True},None)
+        # except (asyncio.exceptions.CancelledError, ConnectionError, StopAsyncIteration) as e:
+        #     await self.on_error(e)
+        #     self.sheaf_mode = "DISABLED"
+        #     await response_functions.presence(self, {"type":"presence","default":True},None)
 
         # await sse_events.close()
         # sse_events = sse_client.EventSource("https://many.skiesatmorning.com", {
-            # "Authorization": f"Bearer {API_KEY}"
+        #     "Authorization": f"Bearer {API_KEY}"
         # })

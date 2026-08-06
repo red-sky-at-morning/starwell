@@ -191,10 +191,10 @@ def get_nickname_by_id(id:str, server:discord.Guild):
 
 def get_nickname(member:dict, server:discord.Guild):
     if "copy-nick" in member.get("tags-util", []):
-        print(server)
+        # print(server)
         id = members["meta"].get("user_id", -1)
         user = server.get_member(id)
-        print(server.members)
+        # print(server.members)
         return user.nick if user.nick is not None else user.global_name
     
     return member.get("nick", {}).get(server.id.__str__(), member.get("username"))
