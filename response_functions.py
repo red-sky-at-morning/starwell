@@ -128,7 +128,12 @@ async def presence(self:discord.Client, item:list[dict]|None, channel:discord.Te
         else:
             # if in full sheaf mode set the full presence to the names of fronting members
             # presence = ""
-            members = [member.get("names")[member.get("name")] for member in self.sheaf_status.get("members", [])]
+            members = [self.curr_member.get("names")[self.curr_member.get("name")]]
+            for member in self.sheaf_status.get("members", []):
+                if member == self.curr_member:
+                    continue
+                members.append(member.get("names")[member.get("name")])
+            # members = [member.get("names")[member.get("name")] if member != self.curr_member for member in self.sheaf_status.get("members", [])]
             presence = ", ".join(members)
             
             # put 'and' before the last member
@@ -154,7 +159,9 @@ async def presence(self:discord.Client, item:list[dict]|None, channel:discord.Te
     
     # if sheaf integration is enabled it takes over emojis
     if not self.sheaf_mode == "DISABLED":
-        emoji += self.curr_member.get("emoji")
+        # use first initial of preferred name if emoji is not set for sheaf
+        initial = self.curr_member.get("names", [])[self.curr_member.get("name")][0].upper()
+        emoji += self.curr_member.get("emoji", initial)
         for member in self.sheaf_status.get("members", []):
             if not member == self.curr_member:
                 emoji += member.get("emoji")
