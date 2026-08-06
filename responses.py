@@ -59,7 +59,7 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
         case "ap":
             response += [{"type":"special","action":"toggle_ap"},{"type":"react","react":"🔴" if ap else "🟢","message":message}]
         case "sheaf":
-            response += [{"type":"special","action":"set_sheaf_mode","mode":command[1]}]
+            response += [{"type":"special","action":"set_sheaf_mode","mode":command[1].upper()}]
         case "blur":
             if len(command) <= 2:
                 response += [{"type":"special","action":"blur","enable": False}]

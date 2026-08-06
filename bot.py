@@ -233,14 +233,14 @@ class Bot(discord.AutoShardedClient):
 
         return True
 
-    @tasks.loop(seconds=5)
-    async def listen(self):
-        await sheaf.heartbeat(self)
+    # @tasks.loop(seconds=15)
+    # async def listen(self):
+    #     await sheaf.heartbeat(self)
 
-    async def setup_hook(self) -> None:
-        if self.sheaf_mode != "DISABLED":
-            sheaf.startup(self)
-            self.listen.start()
+    # async def setup_hook(self) -> None:
+    #     if self.sheaf_mode != "DISABLED":
+    #         sheaf.startup(self)
+    #         self.listen.start()
 
     def startup(self) -> None:
         try:
@@ -251,7 +251,8 @@ class Bot(discord.AutoShardedClient):
         async def run():
             discord.utils.setup_logging(root=False)
             await asyncio.gather(
-                self.start(TOKEN)
+                self.start(TOKEN),
+                sheaf.startup(self)
             )
         try:
             asyncio.run(run())
