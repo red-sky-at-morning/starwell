@@ -45,7 +45,7 @@ class Bot(discord.AutoShardedClient):
             self.ignore_errors = True
         await response_functions.presence(self, {"type":"presence","default":True}, None)
         # await self.change_presence(activity=discord.Activity(name=f"{"🟢" if self.ap else "🔴"}{self.curr_member.get("emoji")} | {self.curr_member.get("presence")}"))
-        print (self.activity)
+        # print (self.activity)
         print(f"{self.user} is now running!")
 
     async def send_dm(self, user:discord.User, content:str) -> None:

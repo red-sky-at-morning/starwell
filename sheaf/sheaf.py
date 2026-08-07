@@ -10,20 +10,10 @@ import response_functions
 
 # on startup, subscribe to sse events
 async def startup(self) -> None:
-    global API_KEY
+    # global API_KEY
     with open("meta/SHEAF.txt") as file:
         API_KEY = file.readline().strip()
 
-    # client = httpx.AsyncClient()
-    # event_source = httpx_sse.aconnect_sse(client, "GET", "https://many.skiesatmorning.com/v1/fronts/stream", headers={
-    #     "Authorization": f"Bearer {API_KEY}"
-    # })
-    
-    await heartbeat(self)
-
-# then on heartbeat check for events
-# if events change status according to self.sheaf_status
-async def heartbeat(self) -> None:
     async with httpx.AsyncClient(timeout=30) as client:
         async with httpx_sse.aconnect_sse(
             client, "GET", "https://many.skiesatmorning.com/v1/fronts/stream",
@@ -39,7 +29,7 @@ async def heartbeat(self) -> None:
                 data = event.json()
                 # data = json.JSONDecoder().decode(event.data)
                 data["event_type"] = event.event
-                print(data)
+                # print(data)
                 
                 fronts = []
                 match data.get("event_type"):
@@ -70,13 +60,3 @@ async def heartbeat(self) -> None:
                     self.sheaf_status["members"].append(member)
                 print("sheaf_status assigned")
                 await response_functions.presence(self, {"type":"presence","default":True},None)
-
-        # except (asyncio.exceptions.CancelledError, ConnectionError, StopAsyncIteration) as e:
-        #     await self.on_error(e)
-        #     self.sheaf_mode = "DISABLED"
-        #     await response_functions.presence(self, {"type":"presence","default":True},None)
-
-        # await sse_events.close()
-        # sse_events = sse_client.EventSource("https://many.skiesatmorning.com", {
-        #     "Authorization": f"Bearer {API_KEY}"
-        # })

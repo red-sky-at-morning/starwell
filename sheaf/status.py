@@ -24,12 +24,15 @@ with open("meta/SHEAF.txt") as file:
 def handle(command: list[str], user_id, message):
     match command[1].lower():
         case "status":
-            return get_sheaf_status(message)
+            return [{"type":"call","call":get_sheaf_status,"wait_type":None,"message":message}]
         case "mode":
             if len(command) <= 3:
                 return [{"type":"call","call":get_sheaf_mode,"wait_type":None,"message":message}]
             else:
-                return set_sheaf_mode(command[2])
+                if not check_user_id(user_id):
+                    return [{"type":"message","message":"You cannot change sheaf integration modes!","except":True}]
+                else:
+                    return set_sheaf_mode(command[2])
         case "disabled" | "default" | "full":
             if not check_user_id(user_id):
                 return [{"type":"message","message":"You cannot change sheaf integration modes!","except":True}]
@@ -47,7 +50,11 @@ def set_sheaf_mode(mode) -> list[dict]:
 async def get_sheaf_mode(self, id, message):
     return {"type":"message","message":f"Sheaf integration mode is currently set to {self.sheaf_mode}", "except":True}
 
-def get_sheaf_status(message) -> list[dict]:
+async def get_sheaf_status(self, id, message) -> list[dict]:
+    if self.sheaf_mode == "DISABLED":
+        embed = discord.Embed(title="many skies at morning",description="Sheaf integration is currently disabled. Check back later!")
+        return {"type":"message","message":"","embed":[embed],"except":True}
+    
     curr = httpx.get(f"https://many.skiesatmorning.com/v1/fronts/current", headers={
         "Authorization": f"Bearer {API_KEY}"
     }).raise_for_status().json()
@@ -113,12 +120,16 @@ def get_sheaf_status(message) -> list[dict]:
             list_txt = f"- {member.get("emoji", initial)} "
             list_txt +=  f"{member.get("names", [])[member.get("name")]}/{members.get_nickname_by_id(member_key, message.guild)} "
             list_txt += f"({member.get("pronouns")})"
-            list_txt += f" for {time}"
+            if self.sheaf_mode == "FULL":
+                list_txt += f" for {time}"
             # list_txt += f"\n*{member.get("desc-short")}*"
             members_txt.append(list_txt)
         
         # then add a new field corresponding to the front
         members_txt = "\n".join(members_txt)
+        if (status is not None) and (self.sheaf_mode == "FULL"):
+            members_txt = f"This front is currently {status}\n" + members_txt
+        
         embed.add_field(name=f"Front {i+1}",value=members_txt)
     
     embed.color = discord.Color.from_str(colors[random.randint(0, len(colors)-1)])

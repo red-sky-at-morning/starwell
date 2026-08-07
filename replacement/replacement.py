@@ -16,6 +16,7 @@ def handle_message(text:str, message:discord.Message, user_id:int, auto:bool, cu
         return []
 
     print(f"default member: {default_member.get("names")[0]}")
+    print(f"current member: {curr_member.get("names")[0]}")
     member_name = has_replacement(text)
     print(f"text member: {member_name}")
 
