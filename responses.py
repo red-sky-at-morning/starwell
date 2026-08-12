@@ -67,6 +67,12 @@ def member_commands(command:list[str], message:discord.Message, channel_id:int, 
                 response += [{"type":"presence","default":True}]
             else:
                 response += [{"type": "special", "action":"blur", "enable": True, "member":command[1:-1]}]
+        case "tag":
+            tag = command[-1].removeprefix("&tag").strip()
+            if not tag:
+                tag = None
+            members.set_server_tag(message.guild, tag)
+            response += [{"type":"message","message":f"Server tag changed to `{tag}`", "except":True}]
         case "setfront":
             if len(command) <= 2:
                 response += [{"type": "webhook", "id":None, "default":True}]

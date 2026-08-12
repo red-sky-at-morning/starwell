@@ -1,6 +1,7 @@
 import json
 import random
 import discord
+import re
 
 with open("webhooks/meta/members.json", "r") as file:
     members:dict = json.load(file)
@@ -198,6 +199,69 @@ def get_nickname(member:dict, server:discord.Guild):
         return user.nick if user.nick is not None else user.global_name
     
     return member.get("nick", {}).get(server.id.__str__(), member.get("username"))
+
+def get_server_tag(server:discord.Guild | int):
+    tags = members["meta"].get("server_tags", {})
+    if type(server) is discord.Guild:
+        return tags.get(server.id.__str__(), "")
+    if type(server) is int:
+        return tags.get(server.__str__(), "")
+
+# (name, username (uname), username-if-nick, username-nickname, pronouns, emoji)
+def replace_tag_placeholders(server, tag:str, member:dict|str):
+    if type(member) is str:
+        member = get_member(member)
+    placeholders = re.findall(r"\$\S*(?::.{2}|\b)", tag)
+    for placeholder in placeholders:
+        tag = replace_placeholder(server, tag, placeholder, member)
+    print(tag)
+    return tag
+
+# "$pronouns:[]"
+# replace the above with [pronouns] if present, else replace with nothing
+# "$pronouns"
+# replace the above with pronouns if present, else replace with nothing
+def replace_placeholder(server, tag:str, placeholder:str, member:dict):
+    if ":" in placeholder:
+        key, brace = placeholder.split(":", 1)
+    else:
+        key = placeholder
+        brace = ""
+    if key[0] != "$":
+        return tag
+    key = key.removeprefix("$")
+    if len(brace) not in (0, 2):
+        return tag
+    
+    val = member.get(key, "")
+    if key == "name":
+        val = member.get("names", [])[member.get(key)]
+    if key == "nickname":
+        val = get_nickname(member, server)
+    
+    if not val:
+        return tag.replace(placeholder, "")
+    else:
+        if brace:
+            return tag.replace(placeholder, f"{brace[0]}{val}{brace[1]}")
+        return tag.replace(placeholder, val)
+
+def set_server_tag(server:discord.Guild | int, tag:str|None):
+    tags = members["meta"]["server_tags"]
+    
+    if type(server) is discord.Guild:
+        id = server.id.__str__()
+    if type(server) is int:
+        id = server.__str__()
+    
+    if not tag:
+        if tags.get(id, None):
+            del tags[id]
+    else:
+        tags[id] = tag
+    
+    with open("webhooks/meta/members.json", "w") as file:
+        json.dump(members, file)
 
 def get_member(id:str) -> dict | None:
     return members["members"].get(id, None)

@@ -42,11 +42,18 @@ async def message(self: discord.Client, item:list[dict]|None, channel:discord.Te
         if type(thread) is discord.Thread:
             await thread.join()
 
+        # system tags
+        tag = ""
+        if members.get_server_tag(channel.guild):
+            tag = members.get_server_tag(channel.guild)
+        
         # send the message
         if item.get("use-default", False):
             name = members.get_nickname(self.default_member, channel.guild)
             if name is None:
                 name = self.default_member.get("username", None)
+            tag = members.replace_tag_placeholders(channel.guild, tag, self.default_member)
+            name += f" {tag}"
             self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=name, avatar_url=self.default_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
             return
         else:
@@ -56,6 +63,8 @@ async def message(self: discord.Client, item:list[dict]|None, channel:discord.Te
                     name = self.curr_member.get("username", None)
             else:
                 name = f"broken--dawn ({', '.join(self.blurred)})"
+            tag = members.replace_tag_placeholders(channel.guild, tag, self.curr_member)
+            name += f" {tag}"
             self.last_sent_message = await hook.send(item.get("message",""), thread=(thread), username=name, avatar_url=self.curr_member.get("avatar", None), files=item.get("files",[]), embeds=item.get("embed", []))
     print(f"Said {item.get('message','No message provided')}{' (with embed)' if item.get("embed", []) else ""} in {channel.name} in {channel.guild.name}")
 

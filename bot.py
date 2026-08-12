@@ -56,7 +56,7 @@ class Bot(discord.AutoShardedClient):
         import sys, traceback
         extype, ex, _ = sys.exc_info()
         print(f"{extype.__name__} exception in {event}: {ex}\n{traceback.format_exc()}")
-        await self.send_dm(self.author, f"{extype.__name__} exception in {event}: ```{ex}\n{traceback.format_exc()}```")
+        await self.send_dm(self.author, f"{extype.__name__} exception in {event}: ```py\n{ex}\n{traceback.format_exc()}```")
         if self.ignore_errors:
             return
         await self.switch_mode("STANDBY")
