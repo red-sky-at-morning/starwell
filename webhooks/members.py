@@ -75,8 +75,12 @@ def list_all(server:discord.Guild) -> list[dict]:
     count = f"{str(len(member_list))}"
     if len(hidden_members):
         count += f" (+{str(len(hidden_members))} hidden for {str(len(hidden_members) + len(member_list))} total)"
-    desc = members["meta"].get("desc-long").replace("$count", count)
-    # desc += f"\n\nCurrent count: {len(members)-1} (+{len(members)-len(member_list)-1} hidden member(s), no we won't show you :p)"
+    desc = members["meta"].get("desc").replace("$count", count)
+    tag = get_server_tag(server)
+    tag = re.sub(r"\$(\S*)(?::(.)(.)|\b)", r"\2\1\3", tag)
+    if not tag:
+        tag = "None set"
+    desc = desc.replace("$tag", tag)
     
     colors = list(member.get("color", "#5b6078") for member in filter_members(lambda x, y: not "no-list" in y.get("tags-util", [])).values())
     color = random.randint(0, len(colors)-1)
@@ -104,7 +108,11 @@ def list_by_tag(tag:str, server:discord.Guild):
     if len(hidden_members):
         count += f" (+{str(len(hidden_members))} hidden for {str(len(hidden_members) + len(member_list))} total)"
     desc = members["meta"].get("desc-long").replace("$count", count)
-    # desc += f"\n\nCurrent count: {len(member_list)+len(hidden_members)} (+{len(hidden_members)} hidden member(s), no we won't show you :p)"
+    server_tag = get_server_tag(server)
+    server_tag = re.sub(r"\$(\S*)(?::(.)(.)|\b)", r"\2\1\3", server_tag)
+    if not server_tag:
+        server_tag = "None set"
+    desc = desc.replace("$tag", server_tag)
     
     colors = list(member.get("color", "#5b6078") for member in filter_members(lambda x, y: (not "no-list" in y.get("tags-util", [])) and (tag in y.get("tags-util", []) + y.get("tags-desc", []))).values())
     color = random.randint(0, len(colors)-1)
